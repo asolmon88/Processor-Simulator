@@ -9,11 +9,15 @@
 #include "Section.hpp"
 
 class Auxiliar {
+  private:
+   static void separate(std::string line, std::vector<std::string>& separated);
   public:
-   void readFile(const char* filename, std::vector<std::string>& instructions);
-   int isInstruction(std::string instruction);
-   void saveInstructions(
-    std::vector<Instruction>& instructions, std::vector<Section_t>& sections);
+   static void readFile(const char* filename, std::vector<std::string>& instructions);
+   static int isInstruction(std::string instruction);
+   static void saveInstructions(
+    std::vector<Instruction>& instructions, std::string instruction);
+   static void saveSection(std::vector<Section_t>& sections, std::string instruction,
+    int index);
 };
 
 #endif  // AUXILIAR_H_

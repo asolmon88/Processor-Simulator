@@ -1,10 +1,10 @@
 #include <fstream>
+#include <iostream>
 #include "Auxiliar.hpp"
 
 void Auxiliar::readFile(const char* filename, std::vector<std::string>& instructions) {
   std::ifstream file;
-  file.open("/home/ariel/Documents/CA/Processor-Simulator/src/test.txt");
-  std::vector<std::string> instructions;// read instructions from the file
+  file.open(filename);
 
   char charInstruction[50];
   std::string strInstruction;
@@ -14,11 +14,9 @@ void Auxiliar::readFile(const char* filename, std::vector<std::string>& instruct
     instructions.push_back(strInstruction);
   }
 
-  /*for (size_t i = 0; i < readInstructions.size(); ++i) {
-    std::cout << readInstructions[i] << std::endl;
+  /*for (size_t i = 0; i < instructions.size(); ++i) {
+    std::cout << instructions[i] << std::endl;
   }*/
-  Instruction first(instructions[0]);
-  
   file.close();
 }
 
@@ -30,11 +28,82 @@ void Auxiliar::readFile(const char* filename, std::vector<std::string>& instruct
  */
 
 int Auxiliar::isInstruction(std::string instruction) {
-  int pos = instruction.find(" ");
+  int pos = instruction.find(",");
   return pos;
 }
 
-void saveInstructions(
-  std::vector<Instruction>& instructions, std::vector<Section_t>& sections) {
-  
+void Auxiliar::saveInstructions(
+  std::vector<Instruction>& instructions, std::string instruction) {
+  std::string currentText;
+  size_t value = 0;
+  int initialPos = 0;
+  int endPos = 0;
+  std::vector<std::string> separated;
+  Instruction newInstruction;
+
+  separate(instruction, separated);
+
+  currentText = separated[0];
+  newInstruction.setOpcode(currentText);
+  // add load to mov between registers
+  if (currentText == "ld") {
+    if (separated[1][0] == 'R') {
+      newInstruction.setMemIndex(stoll(separated[1].substr(
+        1,separated[1].size())));
+      newInstruction.setReg1(separated[2]);
+    } else {
+      newInstruction.setMemIndex(stoll(separated[1]));
+      newInstruction.setReg1(separated[2]);
+    }
+  } else if (currentText == "str") {
+    if (separated[1][0] == 'R') {
+      newInstruction.setReg1(separated[1]);
+    } else {
+      newInstruction.setValue(stoll(separated[1]));
+    }
+    if (separated[2][0] == 'R') {
+      newInstruction.setReg2(separated[2]);
+    } else {
+      newInstruction.setMemIndex(stoll(separated[2]));
+    }
+  } else if (currentText == "mov") {
+    if (separated[1][0] == 'R') {
+      newInstruction.setReg1(separated[1]);
+      newInstruction.setReg2(separated[2]);
+    } else {
+      newInstruction.setValue(stoll(separated[1]));
+      newInstruction.setReg2(separated[2]);
+    }
+  } else if (currentText == "add" || currentText == "sub" 
+    || currentText == "mult") {
+    newInstruction.setReg1(separated[1]);
+    newInstruction.setReg2(separated[2]);
+    newInstruction.setReg3(separated[3]);
+  } else if (currentText == "cmp") {
+    newInstruction.setReg1(separated[1]);
+    newInstruction.setReg2(separated[2]);
+  } else if (currentText == "jmp" || currentText == "je" 
+      || currentText == "ja" || currentText == "jb") {
+    newInstruction.setSection(separated[1]);
+  } else {
+    std::cout << currentText << "is not a valid instruction" << std::endl;
+  }
+}
+
+// Adapted from: 
+// https://www.geeksforgeeks.org/split-a-sentence-into-words-in-cpp/
+void Auxiliar::separate(std::string line, std::vector<std::string>& separated) {
+  std::string word = "";
+  for (auto x : line) {
+    if ((x == ' ' || x == ',') && word != "") {
+      separated.push_back(word);
+      word = "";
+    }
+    else {
+      if (x != ' ') {
+        word = word + x;
+      }
+    }
+  }
+  separated.push_back(word);
 }

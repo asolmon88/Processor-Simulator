@@ -1,5 +1,5 @@
-mv 3, R3
-mv 4, R1
+ld 3, R3
+ld 4, R1
 add R1, R3, R1
-str R1, [R3]
+str R1, R3
 end
