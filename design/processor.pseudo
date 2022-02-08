@@ -1,3 +1,18 @@
 procedure main() do
-  
+  declare finished = 0
+  declare cycles = 0
+  declare instructions = 0
+  declare PC = 0
+
+  declare vector registers size 32
+  declare vector memory size 1024
+  declare vector of instructions 512
+
+  while finished equals 0 do
+    fetch()
+    decode()
+    execute()
+    instructions = instructions+1
+    cycles = cycles + 3
+  end
 end
