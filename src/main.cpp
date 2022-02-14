@@ -11,7 +11,9 @@ int main() {
 
   Simulator simulator;
 
-  Auxiliar::getInstructions(simulator.instructions, simulator.sections); 
+  Auxiliar::getInstructions(simulator.instructions, simulator.sections);
+
+  simulator.simulate();
 
   return 0;
 }

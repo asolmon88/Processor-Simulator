@@ -130,6 +130,11 @@ void Auxiliar::getInstructions(std::vector<Instruction>& instructions,
     } else {
       if (Auxiliar::saveSection(sections, readInstructions[i], currentSection)
       == EXIT_SUCCESS) {
+        if (readInstructions[i] == "end") {
+          Instruction end;
+          end.setOpcode("end");
+          instructions.push_back(end);
+        }
         ++currentSection;
       }
     }

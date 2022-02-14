@@ -8,7 +8,7 @@ using namespace std;
 Instruction::Instruction() {
   this->section = "main";
   this->value = 0;
-  this->memIndex = 6000;
+  this->memIndex = 2000;
   this->register1 = 0;
   this->register2 = 0;
   this->register3 = 0;
@@ -70,4 +70,15 @@ ostream& Instruction::print(ostream& output) {
   output << "R3: " << this->register3 << endl;
   output << endl;
   return output;
+}
+
+Instruction& Instruction::operator=(Instruction& other) {
+  this->opcode = other.getOpcode();
+  this->section = other.getSection();
+  this->value = other.getValue();
+  this->memIndex = other.getMemIndex();
+  this->register1 = other.getR1();
+  this->register2 = other.getR2();
+  this->register3 = other.getR3();
+  return *this;
 }

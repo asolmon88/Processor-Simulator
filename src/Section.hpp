@@ -15,6 +15,12 @@ typedef struct Section {
     return output;
   }
 
+  Section& operator=(Section& other) {
+    this->name = other.name;
+    this->index = other.index;
+    return *this;
+  }
+
 } Section_t;
 
 #endif
