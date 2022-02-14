@@ -4,21 +4,19 @@
 
 #include "Auxiliar.hpp"
 #include "Instruction.hpp"
-
-std::vector<size_t> registers;
-std::vector<size_t> memory;
-std::vector<Instruction> instructions;
+#include "Section.hpp"
 
 int main() {
-  std::vector<std::string> readInstructions;
-  Auxiliar::readFile("/home/ariel/Documents/CA/Processor-Simulator/src/test.txt",
-    readInstructions);
-  for (int i = 0; i < readInstructions.size(); ++i) {
-    if (Auxiliar::isInstruction(readInstructions[i]) != -1) {
-      Auxiliar::saveInstructions(instructions, readInstructions[i]);
-    } else {
-      std::cout << "no es" << std::endl;
-    }
-  }
+  std::vector<size_t> registers;
+  std::vector<size_t> memory;
+  std::vector<Instruction> instructions;
+  std::vector<Section_t> sections;
+
+  Auxiliar::getInstructions(instructions, sections);
+
+  for (int i = 0; i < sections.size(); ++i) {
+    cout << sections[i] << endl;
+  }  
+
   return 0;
 }

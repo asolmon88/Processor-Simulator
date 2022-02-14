@@ -16,8 +16,10 @@ class Auxiliar {
    static int isInstruction(std::string instruction);
    static void saveInstructions(
     std::vector<Instruction>& instructions, std::string instruction);
-   static void saveSection(std::vector<Section_t>& sections, std::string instruction,
+   static int saveSection(std::vector<Section_t>& sections, std::string instruction,
     int index);
+   static void getInstructions(std::vector<Instruction>& instructions,
+    std::vector<Section_t>& sections);
 };
 
 #endif  // AUXILIAR_H_

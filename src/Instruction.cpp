@@ -6,7 +6,12 @@ using namespace std;
 #include "Instruction.hpp"
 
 Instruction::Instruction() {
-  this->memIndex = -1;
+  this->section = "main";
+  this->value = 0;
+  this->memIndex = 6000;
+  this->register1 = 0;
+  this->register2 = 0;
+  this->register3 = 0;
 }
 
 void Instruction::setOpcode(std::string opcode) {
@@ -22,7 +27,7 @@ void Instruction::setReg2(std::string reg2) {
 }
 
 void Instruction::setReg3(std::string reg3) {
-  this->register1 = stoll(reg3.substr(1,reg3.size()));
+  this->register3 = stoll(reg3.substr(1,reg3.size()));
 }
 
 void Instruction::setValue(size_t value) {
@@ -39,4 +44,16 @@ void Instruction::setSection(std::string section) {
 
 int Instruction::changeToMem() {
 
+}
+
+ostream& Instruction::print(ostream& output) {
+  output << "OP code: " << this->opcode << endl;
+  output << "Section: " << this->section << endl;
+  output << "Value: " << this->value << endl;
+  output << "Mem index: " << this->memIndex <<endl;
+  output << "R1: " << this->register1 << endl;
+  output << "R2: " << this->register2 << endl;
+  output << "R3: " << this->register3 << endl;
+  output << endl;
+  return output;
 }

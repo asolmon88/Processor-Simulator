@@ -1,14 +1,21 @@
 #ifndef INSTRUCTIONS_H_
 #define INSTRUCTIONS_H_
 
+#include <iostream>
 #include <string>
+using namespace std;
 
 class Instruction {
+
+  friend ostream& operator<<(ostream& output, Instruction& instruction) {
+    instruction.print(output);
+    return output;
+  }
 
   private:
    std::string opcode;
    std::string section;
-   size_t value;
+   int value;
    size_t memIndex;
    size_t register1;
    size_t register2;
@@ -24,6 +31,7 @@ class Instruction {
    void setMemIndex(size_t index);
    void setSection(std::string section);
    int changeToMem();
+   ostream& print(ostream&);
 };
 
 #endif  // INSTRUCTIONS_H_
