@@ -5,18 +5,13 @@
 #include "Auxiliar.hpp"
 #include "Instruction.hpp"
 #include "Section.hpp"
+#include "Simulator.hpp"
 
 int main() {
-  std::vector<size_t> registers;
-  std::vector<size_t> memory;
-  std::vector<Instruction> instructions;
-  std::vector<Section_t> sections;
 
-  Auxiliar::getInstructions(instructions, sections);
+  Simulator simulator;
 
-  for (int i = 0; i < sections.size(); ++i) {
-    cout << sections[i] << endl;
-  }  
+  Auxiliar::getInstructions(simulator.instructions, simulator.sections); 
 
   return 0;
 }

@@ -32,6 +32,14 @@ class Instruction {
    void setSection(std::string section);
    int changeToMem();
    ostream& print(ostream&);
+
+   std::string getOpcode();
+   std::string getSection();
+   int getValue();
+   size_t getMemIndex();
+   size_t getR1();
+   size_t getR2();
+   size_t getR3();
 };
 
 #endif  // INSTRUCTIONS_H_

@@ -46,6 +46,20 @@ int Instruction::changeToMem() {
 
 }
 
+std::string Instruction::getOpcode() {return this->opcode;}
+
+std::string Instruction::getSection() {return this->section;}
+
+int Instruction::getValue() {return this->value;}
+
+size_t Instruction::getMemIndex() {return this->memIndex;}
+
+size_t Instruction::getR1() {return this->register1;}
+
+size_t Instruction::getR2() {return this->register2;}
+
+size_t Instruction::getR3() {return this->register3;}
+
 ostream& Instruction::print(ostream& output) {
   output << "OP code: " << this->opcode << endl;
   output << "Section: " << this->section << endl;
