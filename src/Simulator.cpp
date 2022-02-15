@@ -1,8 +1,8 @@
 #include "Simulator.hpp"
+#include <iostream>
+#include <unistd.h>
 
 Simulator::Simulator() {
-  std::vector<int> registers = std::vector<int>(32);
-  std::vector<int> memory = std::vector<int>(1024);
   this->finished = 0;
   this->cycles = 0;
   this->numberInstructions = 0;
@@ -20,6 +20,8 @@ void Simulator::decode() {
 
 void Simulator::execute() {
   std::string opcode = currentInstruction.getOpcode();
+  /* std::cout << "CURRENT: " << opcode << std::endl;
+  std::cout << "\nFLAG: " << flag << std::endl; */
   if (opcode == "ld") {
     load();
   } else if (opcode == "str") {
@@ -37,7 +39,7 @@ void Simulator::execute() {
   } else if (opcode == "jmp") {
     jump();
   } else if (opcode == "je") {
-    jumpEqual();    
+    jumpEqual();
   } else if (opcode == "ja") {
     jumpAbove();
   } else if (opcode == "jb") {

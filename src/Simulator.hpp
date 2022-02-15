@@ -24,8 +24,8 @@ class Simulator {
   int find(const std::string&);
 
  public:
-  std::vector<int> registers;
-  std::vector<int> memory;
+  std::vector<int> registers = std::vector<int>(32);
+  std::vector<int> memory = std::vector<int>(1024);
   std::vector<Instruction> instructions;
   std::vector<Section_t> sections;
   Instruction currentInstruction;

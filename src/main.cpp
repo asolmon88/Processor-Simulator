@@ -15,5 +15,7 @@ int main() {
 
   simulator.simulate();
 
+  std::cout << simulator.registers[2] << std::endl;
+
   return 0;
 }
