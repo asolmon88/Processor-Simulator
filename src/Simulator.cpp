@@ -15,13 +15,10 @@ void Simulator::fetch() {
   ++cycles;
 }
 void Simulator::decode() {
-  ++cycles;
-}
-
-void Simulator::execute() {
   std::string opcode = currentInstruction.getOpcode();
   /* std::cout << "CURRENT: " << opcode << std::endl;
-  std::cout << "\nFLAG: " << flag << std::endl; */
+  std::cout << "\nFLAG: " << flag << std::endl;
+  sleep(1); */
   if (opcode == "ld") {
     load();
   } else if (opcode == "str") {
@@ -47,6 +44,11 @@ void Simulator::execute() {
   } else if (opcode == "end") {
     end();
   }
+  ++cycles;
+}
+
+void Simulator::execute() {
+  ++cycles;
 }
 
 void Simulator::load() {
@@ -77,6 +79,10 @@ void Simulator::substract() {
 void Simulator::multiply() {
   registers[currentInstruction.getR3()] =
    registers[currentInstruction.getR2()] * registers[currentInstruction.getR1()];
+  
+  /* std::cout << "R" << currentInstruction.getR3() << ": " << registers[currentInstruction.getR3()] << std::endl;
+  std::cout << "R" << currentInstruction.getR2() << ": " << registers[currentInstruction.getR2()] << std::endl;
+  std::cout << "R" << currentInstruction.getR1() << ": " << registers[currentInstruction.getR1()] << std::endl; */
 }
 void Simulator::compare() {
   flag = registers[currentInstruction.getR2()] -
@@ -106,7 +112,7 @@ void Simulator::end() {
 
 int Simulator::find(const std::string& passed) {
   int startingIndex = 0;
-  for (int i = 0; i < sections.size(); ++i) {
+  for (size_t i = 0; i < sections.size(); ++i) {
     if (sections[i].name == passed) {
       startingIndex = sections[i].index;
     }

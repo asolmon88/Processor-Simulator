@@ -30,7 +30,6 @@ class Instruction {
    void setValue(size_t value);
    void setMemIndex(size_t index);
    void setSection(std::string section);
-   int changeToMem();
    ostream& print(ostream&);
 
    std::string getOpcode();

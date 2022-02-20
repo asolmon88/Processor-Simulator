@@ -42,10 +42,6 @@ void Instruction::setSection(std::string section) {
   this->section = section;
 }
 
-int Instruction::changeToMem() {
-
-}
-
 std::string Instruction::getOpcode() {return this->opcode;}
 
 std::string Instruction::getSection() {return this->section;}

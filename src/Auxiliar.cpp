@@ -40,9 +40,6 @@ int Auxiliar::isInstruction(std::string instruction) {
 void Auxiliar::saveInstructions(
   std::vector<Instruction>& instructions, std::string instruction) {
   std::string currentText;
-  size_t value = 0;
-  int initialPos = 0;
-  int endPos = 0;
   std::vector<std::string> separated;
   Instruction newInstruction;
 
@@ -119,22 +116,23 @@ int Auxiliar::saveSection(std::vector<Section_t>& sections, std::string instruct
 void Auxiliar::getInstructions(std::vector<Instruction>& instructions,
     std::vector<Section_t>& sections) {
   std::vector<std::string> readInstructions;
-  Auxiliar::readFile("/home/ariel/Documents/CA/Processor-Simulator/src/test.txt",
+  Auxiliar::readFile("/home/ariel/Documents/CA/Processor-Simulator/tests/multiply.txt",
     readInstructions);
   size_t currentInstructionIndex = 0;
-  for (int i = 0; i < readInstructions.size(); ++i) {
-    if (readInstructions[i] != "\n" && readInstructions[i] != "\t" &&
-    readInstructions[i] != "" && readInstructions[i] != " ")
-    if (Auxiliar::isInstruction(readInstructions[i]) != -1) {
-      Auxiliar::saveInstructions(instructions, readInstructions[i]);
-      ++currentInstructionIndex;
-    } else {
-      if (Auxiliar::saveSection(sections, readInstructions[i], currentInstructionIndex)
-      == EXIT_SUCCESS) {
-        if (readInstructions[i] == "end") {
-          Instruction end;
-          end.setOpcode("end");
-          instructions.push_back(end);
+  for (size_t i = 0; i < readInstructions.size(); ++i) {
+    if ((readInstructions[i] != "\n") && (readInstructions[i] != "\t") &&
+    (readInstructions[i] != "") && (readInstructions[i] != " ")) {
+      if (Auxiliar::isInstruction(readInstructions[i]) != -1) {
+        Auxiliar::saveInstructions(instructions, readInstructions[i]);
+        ++currentInstructionIndex;
+      } else {
+        if (Auxiliar::saveSection(sections, readInstructions[i], currentInstructionIndex)
+        == EXIT_SUCCESS) {
+          if (readInstructions[i] == "end") {
+            Instruction end;
+            end.setOpcode("end");
+            instructions.push_back(end);
+          }
         }
       }
     }
