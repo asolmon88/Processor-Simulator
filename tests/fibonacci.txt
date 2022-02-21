@@ -1,0 +1,22 @@
+mov 5, R0
+mov 2, R1
+mov 1, R5
+mov 0, R2
+
+fibonacci:
+  mov R0, R7
+  mov R7, R10
+  cmp R1, R10
+  jb halt
+
+  sub R5, R10, R0
+  call fibonacci
+  mov R0, R3
+
+  sub R1, R10, R0
+  call fibonacci
+  add R0, R3, R2
+
+halt:
+  mov R10, R0
+end

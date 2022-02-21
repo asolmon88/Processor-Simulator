@@ -30,10 +30,10 @@ void Auxiliar::readFile(const char* filename, std::vector<std::string>& instruct
  */
 
 int Auxiliar::isInstruction(std::string instruction) {
-  int pos = instruction.find(",");
+  int pos = instruction.find(":");
   if (pos == -1) {
-    pos = instruction.find("j");
-  } 
+    pos = instruction.find("end");
+  }
   return pos;
 }
 
@@ -88,7 +88,8 @@ void Auxiliar::saveInstructions(
     newInstruction.setReg2(separated[2]);
     instructions.push_back(newInstruction);
   } else if (currentText == "jmp" || currentText == "je" 
-      || currentText == "ja" || currentText == "jb") {
+      || currentText == "ja" || currentText == "jb" ||
+      currentText == "call") {
     newInstruction.setSection(separated[1]);
     instructions.push_back(newInstruction);
   } else {
@@ -116,13 +117,13 @@ int Auxiliar::saveSection(std::vector<Section_t>& sections, std::string instruct
 void Auxiliar::getInstructions(std::vector<Instruction>& instructions,
     std::vector<Section_t>& sections) {
   std::vector<std::string> readInstructions;
-  Auxiliar::readFile("/home/ariel/Documents/CA/Processor-Simulator/tests/multiply.txt",
+  Auxiliar::readFile("/home/ariel/Documents/CA/Processor-Simulator/tests/fibonacci.txt",
     readInstructions);
   size_t currentInstructionIndex = 0;
   for (size_t i = 0; i < readInstructions.size(); ++i) {
     if ((readInstructions[i] != "\n") && (readInstructions[i] != "\t") &&
     (readInstructions[i] != "") && (readInstructions[i] != " ")) {
-      if (Auxiliar::isInstruction(readInstructions[i]) != -1) {
+      if (Auxiliar::isInstruction(readInstructions[i]) == -1) {
         Auxiliar::saveInstructions(instructions, readInstructions[i]);
         ++currentInstructionIndex;
       } else {

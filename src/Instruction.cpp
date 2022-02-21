@@ -9,9 +9,9 @@ Instruction::Instruction() {
   this->section = "main";
   this->value = 0;
   this->memIndex = 2000;
-  this->register1 = 0;
-  this->register2 = 0;
-  this->register3 = 0;
+  this->register1 = 34;
+  this->register2 = 34;
+  this->register3 = 34;
 }
 
 void Instruction::setOpcode(std::string opcode) {

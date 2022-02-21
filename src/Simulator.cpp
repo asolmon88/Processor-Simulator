@@ -41,6 +41,8 @@ void Simulator::decode() {
     jumpAbove();
   } else if (opcode == "jb") {
     jumpBelow();
+  } else if (opcode == "call") {
+    call();
   } else if (opcode == "end") {
     end();
   }
@@ -60,8 +62,8 @@ void Simulator::store() {
     registers[currentInstruction.getR1()];
 }
 void Simulator::move() {
-  if (currentInstruction.getR1() > 0 && 
-    currentInstruction.getR2() > 0) {
+  if (currentInstruction.getR1() < 34 && 
+    currentInstruction.getR2() < 34) {
     registers[currentInstruction.getR2()] =
       registers[currentInstruction.getR1()]; 
   } else {
@@ -71,6 +73,9 @@ void Simulator::move() {
 void Simulator::add() {
   registers[currentInstruction.getR3()] =
    registers[currentInstruction.getR2()] + registers[currentInstruction.getR1()];
+  /*std::cout << "R" << currentInstruction.getR3() << ": " << registers[currentInstruction.getR3()] << std::endl;
+  std::cout << "R" << currentInstruction.getR2() << ": " << registers[currentInstruction.getR2()] << std::endl;
+  std::cout << "R" << currentInstruction.getR1() << ": " << registers[currentInstruction.getR1()] << std::endl;*/
 }
 void Simulator::substract() {
   registers[currentInstruction.getR3()] =
@@ -79,10 +84,6 @@ void Simulator::substract() {
 void Simulator::multiply() {
   registers[currentInstruction.getR3()] =
    registers[currentInstruction.getR2()] * registers[currentInstruction.getR1()];
-  
-  /* std::cout << "R" << currentInstruction.getR3() << ": " << registers[currentInstruction.getR3()] << std::endl;
-  std::cout << "R" << currentInstruction.getR2() << ": " << registers[currentInstruction.getR2()] << std::endl;
-  std::cout << "R" << currentInstruction.getR1() << ": " << registers[currentInstruction.getR1()] << std::endl; */
 }
 void Simulator::compare() {
   flag = registers[currentInstruction.getR2()] -
@@ -106,8 +107,17 @@ void Simulator::jumpBelow() {
     jump();
   }
 }
+void Simulator::call() {
+  this->calls.push_back(this->PC);
+  jump();
+}
 void Simulator::end() {
-  finished = 1;
+  if (!this->calls.empty()) {
+    PC = this->calls.back();
+    this->calls.pop_back();
+  } else {
+    finished = 1;
+  }
 }
 
 int Simulator::find(const std::string& passed) {
