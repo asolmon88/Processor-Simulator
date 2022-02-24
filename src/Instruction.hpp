@@ -16,6 +16,8 @@ class Instruction {
    std::string opcode;
    std::string section;
    int value;
+   int offset;
+   int offsetReg;
    size_t memIndex;
    size_t register1;
    size_t register2;
@@ -27,7 +29,9 @@ class Instruction {
    void setReg1(std::string reg1);
    void setReg2(std::string reg2);
    void setReg3(std::string reg3);
-   void setValue(size_t value);
+   void setValue(int value);
+   void setOffset(int value);
+   void setOffsetReg(std::string reg);
    void setMemIndex(size_t index);
    void setSection(std::string section);
    ostream& print(ostream&);

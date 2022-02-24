@@ -133,7 +133,7 @@ int Simulator::find(const std::string& passed) {
 void Simulator::simulate() {
   while(!finished) {
     fetch();
-    decode();
-    execute();
+    //decode();
+    //execute();
   }
 }

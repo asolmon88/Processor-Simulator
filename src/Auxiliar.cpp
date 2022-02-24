@@ -45,6 +45,10 @@ void Auxiliar::saveInstructions(
 
   separate(instruction, separated);
 
+  for(auto x : separated) {
+    cout << x << endl;
+  }
+
   currentText = separated[0];
   newInstruction.setOpcode(currentText);
   // add load to mov between registers
@@ -75,6 +79,13 @@ void Auxiliar::saveInstructions(
     } else {
       newInstruction.setValue(stoi(separated[1]));
       newInstruction.setReg2(separated[2]);
+    }
+    if (separated.size() > 3) {
+      if (separated[3][0] == 'R') {
+        newInstruction.setOffsetReg(separated[3]);
+      } else {
+        newInstruction.setOffset(stoi(separated[3]));
+      }
     }
     instructions.push_back(newInstruction);
   } else if (currentText == "add" || currentText == "sub" 
@@ -117,7 +128,7 @@ int Auxiliar::saveSection(std::vector<Section_t>& sections, std::string instruct
 void Auxiliar::getInstructions(std::vector<Instruction>& instructions,
     std::vector<Section_t>& sections) {
   std::vector<std::string> readInstructions;
-  Auxiliar::readFile("/home/ariel/Documents/CA/Processor-Simulator/tests/fibonacci.txt",
+  Auxiliar::readFile("/home/ariel/Documents/CA/Processor-Simulator/tests/array.txt",
     readInstructions);
   size_t currentInstructionIndex = 0;
   for (size_t i = 0; i < readInstructions.size(); ++i) {
@@ -145,12 +156,12 @@ void Auxiliar::getInstructions(std::vector<Instruction>& instructions,
 void Auxiliar::separate(std::string line, std::vector<std::string>& separated) {
   std::string word = "";
   for (auto x : line) {
-    if ((x == ' ' || x == ',') && word != "") {
+    if ((x == ' ' || x == ',' || x == ']') && word != "") {
       separated.push_back(word);
       word = "";
     }
     else {
-      if (x != ' ') {
+      if (x != ' ' && x != '[') {
         word = word + x;
       }
     }

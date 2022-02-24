@@ -1,0 +1,4 @@
+mov 8, R2
+mov 0, R0
+mov 1, [R0,4]
+mov 2, [R0,R2]

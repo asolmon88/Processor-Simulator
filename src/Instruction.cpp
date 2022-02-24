@@ -12,6 +12,8 @@ Instruction::Instruction() {
   this->register1 = 34;
   this->register2 = 34;
   this->register3 = 34;
+  this->offset = -1;
+  this->offsetReg = -1;
 }
 
 void Instruction::setOpcode(std::string opcode) {
@@ -30,8 +32,16 @@ void Instruction::setReg3(std::string reg3) {
   this->register3 = stoll(reg3.substr(1,reg3.size()));
 }
 
-void Instruction::setValue(size_t value) {
+void Instruction::setValue(int value) {
   this->value = value;
+}
+
+void Instruction::setOffset(int value) {
+  this->offset = value;
+}
+
+void Instruction::setOffsetReg(std::string reg) {
+  this->offsetReg = stoi(reg.substr(1,reg.size()));;
 }
 
 void Instruction::setMemIndex(size_t index) {
