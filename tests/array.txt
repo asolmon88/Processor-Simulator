@@ -1,4 +1,10 @@
 mov 8, R2
-mov 0, R0
-mov 1, [R0,4]
-mov 2, [R0,R2]
+mov 0, R1
+mov 7, R3
+mov 1, [R1,4]
+mov 2, [R1,R2]
+mov 12, R2
+mov R3, [R1,R2]
+mov [R1, 8], R5
+mov [R1, R2], R6
+end

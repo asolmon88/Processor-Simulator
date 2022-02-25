@@ -7,6 +7,13 @@ Simulator::Simulator() {
   this->cycles = 0;
   this->numberInstructions = 0;
   this->PC = -1;
+  Register first(0,0);
+  registers.push_back(first);
+
+  for (int i = 1; i < 32; ++i) {
+    Register reg((i*32)-32, (i*32)-1);
+    registers.push_back(reg);
+  }
 }
 
 void Simulator::fetch() {
@@ -54,35 +61,82 @@ void Simulator::execute() {
 }
 
 void Simulator::load() {
-  registers[currentInstruction.getR1()] = 
+  registers[currentInstruction.getR1()].value = 
     this->memory[currentInstruction.getMemIndex()];
 }
 void Simulator::store() {
   memory[currentInstruction.getMemIndex()] =
-    registers[currentInstruction.getR1()];
+    registers[currentInstruction.getR1()].value;
 }
 void Simulator::move() {
-  if (currentInstruction.getR1() < 34 && 
-    currentInstruction.getR2() < 34) {
-    registers[currentInstruction.getR2()] =
-      registers[currentInstruction.getR1()]; 
+  cout << currentInstruction << endl;
+  if (currentInstruction.getOffset()) {
+    int index = currentInstruction.getOffset()/4;
+    Register_t* currentRegister = &registers[currentInstruction.getR2()];
+    if (currentInstruction.offsetInFront()) {
+      currentRegister = &registers[currentInstruction.getR1()];
+      if (index <= currentRegister->endIndex) {
+        this->registers[currentInstruction.getR2()].value =
+          this->memory[currentRegister->startIndex+index];
+      }
+    } else {
+      if (index <= currentRegister->endIndex) {
+        if (currentInstruction.getR1() < 34 &&
+          currentInstruction.getR2() < 34) {
+          this->memory[currentRegister->startIndex+index] =
+            registers[currentInstruction.getR1()].value;
+        } else {
+          cout << *currentRegister;
+          cout << "valor: " << currentRegister->startIndex << endl;
+          this->memory[currentRegister->startIndex+index] =
+            currentInstruction.getValue();
+        }
+      }
+    }
+  } else if (currentInstruction.getOffsetReg()) {
+    int index = registers[currentInstruction.getOffsetReg()].value/4;
+    Register_t* currentRegister = &registers[currentInstruction.getR2()];
+    if (currentInstruction.offsetInFront()) {
+      currentRegister = &registers[currentInstruction.getR1()];
+      if (index <= currentRegister->endIndex) {
+        this->registers[currentInstruction.getR2()].value =
+          this->memory[currentRegister->startIndex+index];
+      }
+    } else {
+      if (index <= currentRegister->endIndex) {
+        if (currentInstruction.getR1() < 34 &&
+          currentInstruction.getR2() < 34) {
+          this->memory[currentRegister->startIndex+index] =
+            registers[currentInstruction.getR1()].value;
+        } else {
+          this->memory[currentRegister->startIndex+index] =
+            currentInstruction.getValue();
+        }
+      }
+    }
   } else {
-    registers[currentInstruction.getR2()] = currentInstruction.getValue();
+    if (currentInstruction.getR1() < 34 &&
+      currentInstruction.getR2() < 34) {
+      registers[currentInstruction.getR2()].value =
+        registers[currentInstruction.getR1()].value; 
+    } else {
+      registers[currentInstruction.getR2()].value = currentInstruction.getValue();
+    }
   }
 }
 void Simulator::add() {
-  registers[currentInstruction.getR3()] =
+  registers[currentInstruction.getR3()].value =
    registers[currentInstruction.getR2()] + registers[currentInstruction.getR1()];
-  /*std::cout << "R" << currentInstruction.getR3() << ": " << registers[currentInstruction.getR3()] << std::endl;
+  /* std::cout << "R" << currentInstruction.getR3() << ": " << registers[currentInstruction.getR3()] << std::endl;
   std::cout << "R" << currentInstruction.getR2() << ": " << registers[currentInstruction.getR2()] << std::endl;
-  std::cout << "R" << currentInstruction.getR1() << ": " << registers[currentInstruction.getR1()] << std::endl;*/
+  std::cout << "R" << currentInstruction.getR1() << ": " << registers[currentInstruction.getR1()] << std::endl; */
 }
 void Simulator::substract() {
-  registers[currentInstruction.getR3()] =
+  registers[currentInstruction.getR3()].value =
    registers[currentInstruction.getR2()] - registers[currentInstruction.getR1()];
 }
 void Simulator::multiply() {
-  registers[currentInstruction.getR3()] =
+  registers[currentInstruction.getR3()].value =
    registers[currentInstruction.getR2()] * registers[currentInstruction.getR1()];
 }
 void Simulator::compare() {
@@ -133,7 +187,7 @@ int Simulator::find(const std::string& passed) {
 void Simulator::simulate() {
   while(!finished) {
     fetch();
-    //decode();
-    //execute();
+    decode();
+    execute();
   }
 }

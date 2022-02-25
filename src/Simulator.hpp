@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "Instruction.hpp"
+#include "Register.hpp"
 #include "Section.hpp"
 
 class Simulator {
@@ -25,7 +26,7 @@ class Simulator {
   int find(const std::string&);
 
  public:
-  std::vector<int> registers = std::vector<int>(32);
+  std::vector<Register_t> registers;
   std::vector<int> memory = std::vector<int>(1024);
   std::vector<int> calls;
   std::vector<Instruction> instructions;

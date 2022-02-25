@@ -12,8 +12,9 @@ Instruction::Instruction() {
   this->register1 = 34;
   this->register2 = 34;
   this->register3 = 34;
-  this->offset = -1;
-  this->offsetReg = -1;
+  this->offset = 0;
+  this->offsetReg = 0;
+  this->hasOffsetInFront = 0;
 }
 
 void Instruction::setOpcode(std::string opcode) {
@@ -52,6 +53,10 @@ void Instruction::setSection(std::string section) {
   this->section = section;
 }
 
+void Instruction::setOffsetLocation(int location) {
+  this->hasOffsetInFront = location;
+}
+
 std::string Instruction::getOpcode() {return this->opcode;}
 
 std::string Instruction::getSection() {return this->section;}
@@ -66,6 +71,12 @@ size_t Instruction::getR2() {return this->register2;}
 
 size_t Instruction::getR3() {return this->register3;}
 
+int Instruction::getOffset() {return this->offset;}
+
+int Instruction::getOffsetReg() {return this->offsetReg;}
+
+int Instruction::offsetInFront() {return this->hasOffsetInFront;}
+
 ostream& Instruction::print(ostream& output) {
   output << "OP code: " << this->opcode << endl;
   output << "Section: " << this->section << endl;
@@ -74,6 +85,9 @@ ostream& Instruction::print(ostream& output) {
   output << "R1: " << this->register1 << endl;
   output << "R2: " << this->register2 << endl;
   output << "R3: " << this->register3 << endl;
+  output << "Offset: " << this->offset << endl;
+  output << "Offset Index: " << this->offsetReg << endl;
+  output << "Offset in front: " << this->hasOffsetInFront << endl;
   output << endl;
   return output;
 }
@@ -86,5 +100,8 @@ Instruction& Instruction::operator=(Instruction& other) {
   this->register1 = other.getR1();
   this->register2 = other.getR2();
   this->register3 = other.getR3();
+  this->offset = other.getOffset();
+  this->offsetReg = other.getOffsetReg();
+  this->hasOffsetInFront = other.offsetInFront();
   return *this;
 }

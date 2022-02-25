@@ -15,6 +15,23 @@ typedef struct Register {
     this->value = value;
   }
 
+  int operator+(Register other) {
+    return this->value + other.value;
+  }
+  int operator-(Register other) {
+    return this->value - other.value;
+  }
+  int operator*(Register other) {
+    return this->value * other.value;
+  }
+
+  friend ostream& operator<<(ostream& output, Register& reg) {
+    output << "start: " << reg.startIndex << endl;
+    output << "end: " << reg.endIndex << endl;
+    output << "Value: " << reg.value << endl;
+    return output;
+  }
+
 } Register_t; 
 
 #endif  // Register

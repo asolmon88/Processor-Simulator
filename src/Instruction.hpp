@@ -18,6 +18,7 @@ class Instruction {
    int value;
    int offset;
    int offsetReg;
+   int hasOffsetInFront;
    size_t memIndex;
    size_t register1;
    size_t register2;
@@ -32,6 +33,7 @@ class Instruction {
    void setValue(int value);
    void setOffset(int value);
    void setOffsetReg(std::string reg);
+   void setOffsetLocation(int value);
    void setMemIndex(size_t index);
    void setSection(std::string section);
    ostream& print(ostream&);
@@ -39,6 +41,9 @@ class Instruction {
    std::string getOpcode();
    std::string getSection();
    int getValue();
+   int getOffset();
+   int getOffsetReg();
+   int offsetInFront();
    size_t getMemIndex();
    size_t getR1();
    size_t getR2();
