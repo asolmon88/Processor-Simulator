@@ -24,11 +24,13 @@ class Simulator {
   void call();
   void end();
   int find(const std::string&);
+  void checkRegisters();
 
  public:
   std::vector<Register_t> registers;
   std::vector<int> memory = std::vector<int>(1024);
   std::vector<int> calls;
+  std::vector<std::vector<Register_t>> callRegister;
   std::vector<Instruction> instructions;
   std::vector<Section_t> sections;
   Instruction currentInstruction;

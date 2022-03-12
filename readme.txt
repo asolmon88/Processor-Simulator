@@ -29,5 +29,5 @@ on the terminal write "make run" and the program will run.
 
 Things left to do:
 
-* Incorporate arrays on the simulator.
-* Continue with the other stages.
+*Incorporate recursion
+*Other stages

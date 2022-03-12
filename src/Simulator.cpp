@@ -69,7 +69,7 @@ void Simulator::store() {
     registers[currentInstruction.getR1()].value;
 }
 void Simulator::move() {
-  cout << currentInstruction << endl;
+  //cout << currentInstruction << endl;
   if (currentInstruction.getOffset()) {
     int index = currentInstruction.getOffset()/4;
     Register_t* currentRegister = &registers[currentInstruction.getR2()];
@@ -86,8 +86,8 @@ void Simulator::move() {
           this->memory[currentRegister->startIndex+index] =
             registers[currentInstruction.getR1()].value;
         } else {
-          cout << *currentRegister;
-          cout << "valor: " << currentRegister->startIndex << endl;
+          //cout << *currentRegister;
+          //cout << "valor: " << currentRegister->startIndex << endl;
           this->memory[currentRegister->startIndex+index] =
             currentInstruction.getValue();
         }
@@ -163,11 +163,16 @@ void Simulator::jumpBelow() {
 }
 void Simulator::call() {
   this->calls.push_back(this->PC);
+  this->callRegister.push_back(this->registers);
   jump();
 }
 void Simulator::end() {
   if (!this->calls.empty()) {
+    if (this->calls.size() >= 2) {
+      checkRegisters();
+    }
     PC = this->calls.back();
+    this->registers = this->callRegister.back();
     this->calls.pop_back();
   } else {
     finished = 1;
@@ -182,6 +187,15 @@ int Simulator::find(const std::string& passed) {
     }
   }
   return startingIndex;
+}
+
+void Simulator::checkRegisters() {
+  std::vector<Register_t>* register1 = &(this->callRegister[
+    this->callRegister.size()-1]);
+  std::vector<Register_t>* register2 = &(this->callRegister[
+    this->callRegister.size()-2]);
+  (*register2)[0].value = (*register1)[0].value;
+  cout << "Valor que se pasa " << (*register1)[0] << endl;
 }
 
 void Simulator::simulate() {

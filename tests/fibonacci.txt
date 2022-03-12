@@ -16,7 +16,10 @@ fibonacci:
   sub R1, R10, R0
   call fibonacci
   add R0, R3, R2
+  jmp return
 
 halt:
   mov R10, R0
+return:
+  mov R2, R0
 end
