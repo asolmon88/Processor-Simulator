@@ -25,6 +25,7 @@ class Simulator {
   void end();
   int find(const std::string&);
   void checkRegisters();
+  void printRegisters();
 
  public:
   std::vector<Register_t> registers;

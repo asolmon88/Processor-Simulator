@@ -20,6 +20,7 @@ fibonacci:
 
 halt:
   mov R10, R0
+end
 return:
   mov R2, R0
 end
