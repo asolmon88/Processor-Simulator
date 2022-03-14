@@ -16,9 +16,9 @@ int main() {
   simulator.simulate();
 
   std::cout << simulator.registers[0] << std::endl;
-  /* for (auto x : simulator.instructions) {
+
+ /*  for (auto x : simulator.instructions) {
     cout << x << endl;
   } */
-
   return 0;
 }

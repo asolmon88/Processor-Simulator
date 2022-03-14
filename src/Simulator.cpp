@@ -164,15 +164,15 @@ void Simulator::jumpBelow() {
 void Simulator::call() {
   this->calls.push_back(this->PC);
   this->callRegister.push_back(this->registers);
+  /* printRegisters();
+  sleep(10); */
   jump();
 }
 void Simulator::end() {
+  /* printRegisters();
+  sleep(10); */
   if (!this->calls.empty()) {
-    if (this->calls.size() >= 2) {
-      printRegisters();
-      sleep(1);
-      checkRegisters();
-    }
+    checkRegisters();
     PC = this->calls.back();
     this->registers = this->callRegister.back();
     this->calls.pop_back();
@@ -193,19 +193,15 @@ int Simulator::find(const std::string& passed) {
 }
 
 void Simulator::checkRegisters() {
-  cout << "Passing from" << endl;
+  /* cout << "Passing from" << endl;
   cout << this->callRegister[
     this->callRegister.size()-1][0] << endl;
   cout << "To" << endl;
   cout << this->callRegister[
     this->callRegister.size()-2][0] << endl;
-  cout << "---------------------------" << endl << endl;
-  sleep(3);
-  std::vector<Register_t>* register1 = &(this->callRegister[
-    this->callRegister.size()-1]);
-  std::vector<Register_t>* register2 = &(this->callRegister[
-    this->callRegister.size()-2]);
-  (*register2)[0].value = (*register1)[0].value;
+  cout << "---------------------------" << endl << endl; */
+  //sleep(3);
+  (this->callRegister[this->callRegister.size()-1])[0].value = this->registers[0].value;
 }
 
 void Simulator::printRegisters() {
