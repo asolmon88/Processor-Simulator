@@ -1,6 +1,8 @@
 #ifndef REGISTER_
 #define REGISTER_
 
+#include <iostream>
+
 typedef struct Register {
   int value;
   int startIndex;
@@ -32,10 +34,10 @@ typedef struct Register {
     this->endIndex = other.endIndex;
   }
 
-  friend ostream& operator<<(ostream& output, Register& reg) {
-    output << "start: " << reg.startIndex << endl;
-    output << "end: " << reg.endIndex << endl;
-    output << "Value: " << reg.value << endl;
+  friend std::ostream& operator<<(std::ostream& output, Register& reg) {
+    output << "start: " << reg.startIndex << std::endl;
+    output << "end: " << reg.endIndex << std::endl;
+    output << "Value: " << reg.value << std::endl;
     return output;
   }
 

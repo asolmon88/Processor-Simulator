@@ -1,12 +1,14 @@
 #include "Simulator.hpp"
 #include <iostream>
 #include <unistd.h>
-
+// benchmarks, recursive, factorial, sorting, 4 more or less
+// stage 4 how many, as many as you want to portray in the slides
 Simulator::Simulator() {
   this->finished = 0;
   this->cycles = 0;
   this->numberInstructions = 0;
   this->PC = -1;
+  this->branch = 0;
   Register first(0,0);
   registers.push_back(first);
 
@@ -14,18 +16,48 @@ Simulator::Simulator() {
     Register reg((i*32)-32, (i*32)-1);
     registers.push_back(reg);
   }
+  Instruction temp;
+  temp.setOpcode("");
+  for (int i = 0; i < 3; ++i) {
+    currentInstructions.push_back(temp);
+  }
 }
 
 void Simulator::fetch() {
   ++PC;
-  currentInstruction = instructions[PC];
-  ++cycles;
+  if (branch) {
+    currentInstructions[0].setOpcode("wait"); // this is how it waits
+    branch = 0;
+    PC -= 2;
+    ++cycles;
+  } else if (PC < (int)instructions.size()) {
+    currentInstructions[0] = instructions[PC];
+    ++cycles;
+  } else {
+    currentInstructions[0].setOpcode("done");
+  }
+  // cout << currentInstructions[0].getOpcode() << "\t";
 }
 void Simulator::decode() {
-  std::string opcode = currentInstruction.getOpcode();
-  /* std::cout << "CURRENT: " << opcode << std::endl;
-  std::cout << "\nFLAG: " << flag << std::endl;
+  Instruction* currentInstruction = &currentInstructions[1];
+  /* std::cout << "\nFLAG: " << flag << std::endl;
   sleep(1); */
+  if (currentInstruction->getOpcode() == "jmp" ||
+    currentInstruction->getOpcode() == "ja" ||
+    currentInstruction->getOpcode() == "je" ||
+    currentInstruction->getOpcode() == "jb") {
+    currentInstructions[0].setOpcode("wait"); // this is how it waits
+    this->branch = 1;
+  }
+  if (currentInstruction->getOpcode() == "end") {
+    ++cycles;
+  }
+  // std::cout << currentInstruction->getOpcode() << "\t";
+}
+
+void Simulator::execute() {
+  this->currentInstruction = currentInstructions[2];
+  std::string opcode = this->currentInstruction.getOpcode();
   if (opcode == "ld") {
     load();
   } else if (opcode == "str") {
@@ -33,13 +65,13 @@ void Simulator::decode() {
   } else if (opcode == "mov") {
     move();
   } else if (opcode == "add") {
-    add();
+    ALU::add(this->registers, this->currentInstruction);
   } else if (opcode == "sub") {
-    substract();
+    ALU::substract(this->registers, this->currentInstruction);
   } else if (opcode == "mult") {
-    multiply();
+    ALU::multiply(this->registers, this->currentInstruction);
   } else if (opcode == "cmp") {
-    compare();
+    ALU::compare(this->registers, this->currentInstruction, this->flag);
   } else if (opcode == "jmp") {
     jump();
   } else if (opcode == "je") {
@@ -52,12 +84,9 @@ void Simulator::decode() {
     call();
   } else if (opcode == "end") {
     end();
+    ++cycles;
   }
-  ++cycles;
-}
-
-void Simulator::execute() {
-  ++cycles;
+  // std::cout << this->currentInstruction.getOpcode() << std::endl;
 }
 
 void Simulator::load() {
@@ -124,25 +153,7 @@ void Simulator::move() {
     }
   }
 }
-void Simulator::add() {
-  registers[currentInstruction.getR3()].value =
-   registers[currentInstruction.getR2()] + registers[currentInstruction.getR1()];
-  /* std::cout << "R" << currentInstruction.getR3() << ": " << registers[currentInstruction.getR3()] << std::endl;
-  std::cout << "R" << currentInstruction.getR2() << ": " << registers[currentInstruction.getR2()] << std::endl;
-  std::cout << "R" << currentInstruction.getR1() << ": " << registers[currentInstruction.getR1()] << std::endl; */
-}
-void Simulator::substract() {
-  registers[currentInstruction.getR3()].value =
-   registers[currentInstruction.getR2()] - registers[currentInstruction.getR1()];
-}
-void Simulator::multiply() {
-  registers[currentInstruction.getR3()].value =
-   registers[currentInstruction.getR2()] * registers[currentInstruction.getR1()];
-}
-void Simulator::compare() {
-  flag = registers[currentInstruction.getR2()] -
-    registers[currentInstruction.getR1()];
-}
+
 void Simulator::jump() {
   PC = find(currentInstruction.getSection())-1;
 }
@@ -220,5 +231,7 @@ void Simulator::simulate() {
     fetch();
     decode();
     execute();
+    currentInstructions[2] = currentInstructions[1];
+    currentInstructions[1] = currentInstructions[0];
   }
 }
