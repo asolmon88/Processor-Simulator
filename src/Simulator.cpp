@@ -59,11 +59,11 @@ void Simulator::execute() {
   this->currentInstruction = currentInstructions[2];
   std::string opcode = this->currentInstruction.getOpcode();
   if (opcode == "ld") {
-    load();
+    LSUnit::load(this->registers, currentInstruction, memory);
   } else if (opcode == "str") {
-    store();
+    LSUnit::store(this->registers, currentInstruction, memory);
   } else if (opcode == "mov") {
-    move();
+    LSUnit::move(this->registers, currentInstruction, memory);
   } else if (opcode == "add") {
     ALU::add(this->registers, this->currentInstruction);
   } else if (opcode == "sub") {
@@ -89,7 +89,7 @@ void Simulator::execute() {
   // std::cout << this->currentInstruction.getOpcode() << std::endl;
 }
 
-void Simulator::load() {
+/* void Simulator::load() {
   registers[currentInstruction.getR1()].value = 
     this->memory[currentInstruction.getMemIndex()];
 }
@@ -152,7 +152,7 @@ void Simulator::move() {
       registers[currentInstruction.getR2()].value = currentInstruction.getValue();
     }
   }
-}
+} */
 
 void Simulator::jump() {
   PC = find(currentInstruction.getSection())-1;

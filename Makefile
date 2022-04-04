@@ -5,3 +5,7 @@ compile: src/main.cpp
 
 run: main
 	./main
+
+.PHONY: clean
+clean:
+	rm -f main

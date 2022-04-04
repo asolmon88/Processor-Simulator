@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "ALU.hpp"
+#include "LSUnit.hpp"
 #include "Instruction.hpp"
 #include "Register.hpp"
 #include "Section.hpp"
