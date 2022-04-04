@@ -35,7 +35,7 @@ class Simulator {
   // To handle instructions
   std::vector<Instruction> instructions;
   std::vector<Section_t> sections;
-  std::vector<Instruction> currentInstructions;
+  std::vector<std::vector<Instruction>> currentInstructions;
   Instruction currentInstruction;
 
   int finished;

@@ -49,7 +49,7 @@ class Instruction {
    size_t getR2();
    size_t getR3();
 
-   Instruction& operator=(Instruction&);
+   //Instruction& operator=(Instruction&);
 };
 
 #endif  // INSTRUCTIONS_H_

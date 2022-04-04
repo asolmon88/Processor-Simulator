@@ -18,77 +18,103 @@ Simulator::Simulator() {
   }
   Instruction temp;
   temp.setOpcode("");
-  for (int i = 0; i < 3; ++i) {
-    currentInstructions.push_back(temp);
+  std::vector<Instruction> tempVect;
+  for (int i = 0; i < 4; ++i) {
+    tempVect.push_back(temp);
+  }
+  for (int j = 0; j < 3; ++j) {
+    this->currentInstructions.push_back(tempVect);
   }
 }
 
 void Simulator::fetch() {
   ++PC;
   if (branch) {
-    currentInstructions[0].setOpcode("wait"); // this is how it waits
+    for (int i = 0; i < 4; ++i) {
+      currentInstructions[0][i].setOpcode("wait"); // this is how it waits
+    }
     branch = 0;
-    PC -= 2;
+    PC -= 5;
     ++cycles;
   } else if (PC < (int)instructions.size()) {
-    currentInstructions[0] = instructions[PC];
+    for (int i = 0; i < 4; ++i) {
+      if (PC < (int)instructions.size()) {
+        currentInstructions[0][i] = instructions[PC];
+      } else {
+        currentInstructions[0][i].setOpcode("done");
+      }
+      ++PC;
+    }
+    --PC;
     ++cycles;
   } else {
-    currentInstructions[0].setOpcode("done");
+    for (int i = 0; i < 4; ++i) {
+      currentInstructions[0][i].setOpcode("done");
+    }
   }
-  cout << currentInstructions[0].getOpcode() << "\t";
+  // cout << currentInstructions[0].getOpcode() << "\t";
 }
 void Simulator::decode() {
-  Instruction* currentInstruction = &currentInstructions[1];
-  /* std::cout << "\nFLAG: " << flag << std::endl;
-  sleep(1); */
-  if (currentInstruction->getOpcode() == "jmp" ||
-    currentInstruction->getOpcode() == "ja" ||
-    currentInstruction->getOpcode() == "je" ||
-    currentInstruction->getOpcode() == "jb" ||
-    currentInstruction->getOpcode() == "call") {
-    currentInstructions[0].setOpcode("wait"); // this is how it waits
-    this->branch = 1;
+  for (int i = 0; i < 4; ++i) {
+    Instruction* currentInstruction = &currentInstructions[1][i];
+    /* std::cout << "\nFLAG: " << flag << std::endl;
+    sleep(1); */
+    if (branch) {
+      currentInstruction->setOpcode("wait");
+    } else if (currentInstruction->getOpcode() == "jmp" ||
+      currentInstruction->getOpcode() == "ja" ||
+      currentInstruction->getOpcode() == "je" ||
+      currentInstruction->getOpcode() == "jb" ||
+      currentInstruction->getOpcode() == "call") {
+      currentInstructions[0][0].setOpcode("wait");
+      currentInstructions[0][1].setOpcode("wait");
+      currentInstructions[0][2].setOpcode("wait");
+      currentInstructions[0][3].setOpcode("wait"); // this is how it waits
+      this->PC -= 3 - i;
+      this->branch = 1;
+    }
+    if (currentInstruction->getOpcode() == "end") {
+      ++cycles;
+    }
+    // std::cout << currentInstruction->getOpcode() << "\t";
   }
-  if (currentInstruction->getOpcode() == "end") {
-    ++cycles;
-  }
-  // std::cout << currentInstruction->getOpcode() << "\t";
 }
 
 void Simulator::execute() {
-  this->currentInstruction = currentInstructions[2];
-  std::string opcode = this->currentInstruction.getOpcode();
-  if (opcode == "ld") {
-    LSUnit::load(this->registers, currentInstruction, this->memory);
-  } else if (opcode == "str") {
-    LSUnit::store(this->registers, currentInstruction, this->memory);
-  } else if (opcode == "mov") {
-    LSUnit::move(this->registers, currentInstruction, this->memory);
-  } else if (opcode == "add") {
-    ALU::add(this->registers, this->currentInstruction);
-  } else if (opcode == "sub") {
-    ALU::substract(this->registers, this->currentInstruction);
-  } else if (opcode == "mult") {
-    ALU::multiply(this->registers, this->currentInstruction);
-  } else if (opcode == "cmp") {
-    ALU::compare(this->registers, this->currentInstruction, this->flag);
-  } else if (opcode == "jmp") {
-    BranchUnit::jump(this->PC, currentInstruction, this->sections);
-  } else if (opcode == "je") {
-    BranchUnit::jumpEqual(this->PC, currentInstruction, this->flag, this->sections);
-  } else if (opcode == "ja") {
-    BranchUnit::jumpAbove(this->PC, currentInstruction, this->flag, this->sections);
-  } else if (opcode == "jb") {
-    BranchUnit::jumpBelow(this->PC, currentInstruction, this->flag, this->sections);
-  } else if (opcode == "call") {
-    BranchUnit::call(this->PC, currentInstruction, this->calls, this->callRegister,
-      this->registers, this->sections);
-  } else if (opcode == "end") {
-    end();
-    ++cycles;
+  for (int i = 0; i < 4; ++i) {
+    this->currentInstruction = currentInstructions[2][i];
+    std::string opcode = this->currentInstruction.getOpcode();
+    if (opcode == "ld") {
+      LSUnit::load(this->registers, currentInstruction, this->memory);
+    } else if (opcode == "str") {
+      LSUnit::store(this->registers, currentInstruction, this->memory);
+    } else if (opcode == "mov") {
+      LSUnit::move(this->registers, currentInstruction, this->memory);
+    } else if (opcode == "add") {
+      ALU::add(this->registers, this->currentInstruction);
+    } else if (opcode == "sub") {
+      ALU::substract(this->registers, this->currentInstruction);
+    } else if (opcode == "mult") {
+      ALU::multiply(this->registers, this->currentInstruction);
+    } else if (opcode == "cmp") {
+      ALU::compare(this->registers, this->currentInstruction, this->flag);
+    } else if (opcode == "jmp") {
+      BranchUnit::jump(this->PC, currentInstruction, this->sections);
+    } else if (opcode == "je") {
+      BranchUnit::jumpEqual(this->PC, currentInstruction, this->flag, this->sections);
+    } else if (opcode == "ja") {
+      BranchUnit::jumpAbove(this->PC, currentInstruction, this->flag, this->sections);
+    } else if (opcode == "jb") {
+      BranchUnit::jumpBelow(this->PC, currentInstruction, this->flag, this->sections);
+    } else if (opcode == "call") {
+      BranchUnit::call(this->PC, currentInstruction, this->calls, this->callRegister,
+        this->registers, this->sections);
+    } else if (opcode == "end") {
+      end();
+      ++cycles;
+    }
+    //std::cout << this->currentInstruction.getOpcode() << std::endl;
   }
-  // std::cout << this->currentInstruction.getOpcode() << std::endl;
 }
 
 void Simulator::end() {
@@ -125,6 +151,14 @@ void Simulator::simulate() {
     fetch();
     decode();
     execute();
+    /* for (int i = 0; i < 4; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        std::cout << this->currentInstructions[j][i].getOpcode() << "\t";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << "--------------------------------" << std::endl;
+    sleep(1); */
     currentInstructions[2] = currentInstructions[1];
     currentInstructions[1] = currentInstructions[0];
   }

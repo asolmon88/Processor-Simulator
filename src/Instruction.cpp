@@ -92,7 +92,7 @@ ostream& Instruction::print(ostream& output) {
   return output;
 }
 
-Instruction& Instruction::operator=(Instruction& other) {
+/* Instruction& Instruction::operator=(Instruction& other) {
   this->opcode = other.getOpcode();
   this->section = other.getSection();
   this->value = other.getValue();
@@ -104,4 +104,4 @@ Instruction& Instruction::operator=(Instruction& other) {
   this->offsetReg = other.getOffsetReg();
   this->hasOffsetInFront = other.offsetInFront();
   return *this;
-}
+} */
