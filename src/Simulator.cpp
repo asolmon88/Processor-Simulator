@@ -36,7 +36,7 @@ void Simulator::fetch() {
   } else {
     currentInstructions[0].setOpcode("done");
   }
-  // cout << currentInstructions[0].getOpcode() << "\t";
+  cout << currentInstructions[0].getOpcode() << "\t";
 }
 void Simulator::decode() {
   Instruction* currentInstruction = &currentInstructions[1];
@@ -45,7 +45,8 @@ void Simulator::decode() {
   if (currentInstruction->getOpcode() == "jmp" ||
     currentInstruction->getOpcode() == "ja" ||
     currentInstruction->getOpcode() == "je" ||
-    currentInstruction->getOpcode() == "jb") {
+    currentInstruction->getOpcode() == "jb" ||
+    currentInstruction->getOpcode() == "call") {
     currentInstructions[0].setOpcode("wait"); // this is how it waits
     this->branch = 1;
   }
@@ -59,11 +60,11 @@ void Simulator::execute() {
   this->currentInstruction = currentInstructions[2];
   std::string opcode = this->currentInstruction.getOpcode();
   if (opcode == "ld") {
-    LSUnit::load(this->registers, currentInstruction, memory);
+    LSUnit::load(this->registers, currentInstruction, this->memory);
   } else if (opcode == "str") {
-    LSUnit::store(this->registers, currentInstruction, memory);
+    LSUnit::store(this->registers, currentInstruction, this->memory);
   } else if (opcode == "mov") {
-    LSUnit::move(this->registers, currentInstruction, memory);
+    LSUnit::move(this->registers, currentInstruction, this->memory);
   } else if (opcode == "add") {
     ALU::add(this->registers, this->currentInstruction);
   } else if (opcode == "sub") {
@@ -73,15 +74,16 @@ void Simulator::execute() {
   } else if (opcode == "cmp") {
     ALU::compare(this->registers, this->currentInstruction, this->flag);
   } else if (opcode == "jmp") {
-    jump();
+    BranchUnit::jump(this->PC, currentInstruction, this->sections);
   } else if (opcode == "je") {
-    jumpEqual();
+    BranchUnit::jumpEqual(this->PC, currentInstruction, this->flag, this->sections);
   } else if (opcode == "ja") {
-    jumpAbove();
+    BranchUnit::jumpAbove(this->PC, currentInstruction, this->flag, this->sections);
   } else if (opcode == "jb") {
-    jumpBelow();
+    BranchUnit::jumpBelow(this->PC, currentInstruction, this->flag, this->sections);
   } else if (opcode == "call") {
-    call();
+    BranchUnit::call(this->PC, currentInstruction, this->calls, this->callRegister,
+      this->registers, this->sections);
   } else if (opcode == "end") {
     end();
     ++cycles;
@@ -89,96 +91,6 @@ void Simulator::execute() {
   // std::cout << this->currentInstruction.getOpcode() << std::endl;
 }
 
-/* void Simulator::load() {
-  registers[currentInstruction.getR1()].value = 
-    this->memory[currentInstruction.getMemIndex()];
-}
-void Simulator::store() {
-  memory[currentInstruction.getMemIndex()] =
-    registers[currentInstruction.getR1()].value;
-}
-void Simulator::move() {
-  //cout << currentInstruction << endl;
-  if (currentInstruction.getOffset()) {
-    int index = currentInstruction.getOffset()/4;
-    Register_t* currentRegister = &registers[currentInstruction.getR2()];
-    if (currentInstruction.offsetInFront()) {
-      currentRegister = &registers[currentInstruction.getR1()];
-      if (index <= currentRegister->endIndex) {
-        this->registers[currentInstruction.getR2()].value =
-          this->memory[currentRegister->startIndex+index];
-      }
-    } else {
-      if (index <= currentRegister->endIndex) {
-        if (currentInstruction.getR1() < 34 &&
-          currentInstruction.getR2() < 34) {
-          this->memory[currentRegister->startIndex+index] =
-            registers[currentInstruction.getR1()].value;
-        } else {
-          //cout << *currentRegister;
-          //cout << "valor: " << currentRegister->startIndex << endl;
-          this->memory[currentRegister->startIndex+index] =
-            currentInstruction.getValue();
-        }
-      }
-    }
-  } else if (currentInstruction.getOffsetReg()) {
-    int index = registers[currentInstruction.getOffsetReg()].value/4;
-    Register_t* currentRegister = &registers[currentInstruction.getR2()];
-    if (currentInstruction.offsetInFront()) {
-      currentRegister = &registers[currentInstruction.getR1()];
-      if (index <= currentRegister->endIndex) {
-        this->registers[currentInstruction.getR2()].value =
-          this->memory[currentRegister->startIndex+index];
-      }
-    } else {
-      if (index <= currentRegister->endIndex) {
-        if (currentInstruction.getR1() < 34 &&
-          currentInstruction.getR2() < 34) {
-          this->memory[currentRegister->startIndex+index] =
-            registers[currentInstruction.getR1()].value;
-        } else {
-          this->memory[currentRegister->startIndex+index] =
-            currentInstruction.getValue();
-        }
-      }
-    }
-  } else {
-    if (currentInstruction.getR1() < 34 &&
-      currentInstruction.getR2() < 34) {
-      registers[currentInstruction.getR2()].value =
-        registers[currentInstruction.getR1()].value; 
-    } else {
-      registers[currentInstruction.getR2()].value = currentInstruction.getValue();
-    }
-  }
-} */
-
-void Simulator::jump() {
-  PC = find(currentInstruction.getSection())-1;
-}
-void Simulator::jumpEqual() {
-  if (!flag) {
-    jump();
-  }
-}
-void Simulator::jumpAbove() {
-  if (flag > 0) {
-    jump();
-  }
-}
-void Simulator::jumpBelow() {
-  if (flag < 0) {
-    jump();
-  }
-}
-void Simulator::call() {
-  this->calls.push_back(this->PC);
-  this->callRegister.push_back(this->registers);
-  /* printRegisters();
-  sleep(10); */
-  jump();
-}
 void Simulator::end() {
   /* printRegisters();
   sleep(10); */
@@ -193,25 +105,7 @@ void Simulator::end() {
   }
 }
 
-int Simulator::find(const std::string& passed) {
-  int startingIndex = 0;
-  for (size_t i = 0; i < sections.size(); ++i) {
-    if (sections[i].name == passed) {
-      startingIndex = sections[i].index;
-    }
-  }
-  return startingIndex;
-}
-
 void Simulator::checkRegisters() {
-  /* cout << "Passing from" << endl;
-  cout << this->callRegister[
-    this->callRegister.size()-1][0] << endl;
-  cout << "To" << endl;
-  cout << this->callRegister[
-    this->callRegister.size()-2][0] << endl;
-  cout << "---------------------------" << endl << endl; */
-  //sleep(3);
   (this->callRegister[this->callRegister.size()-1])[0].value = this->registers[0].value;
 }
 

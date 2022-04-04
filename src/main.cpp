@@ -13,7 +13,7 @@ int main() {
 
   Auxiliar::getInstructions(simulator.instructions, simulator.sections);
 
-  // std::cout << "Fetch\tDecode\tExecute" << std::endl;
+  //std::cout << "Fetch\tDecode\tExecute" << std::endl;
 
   simulator.simulate();
 

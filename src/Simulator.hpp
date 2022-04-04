@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "ALU.hpp"
+#include "BranchUnit.hpp"
 #include "LSUnit.hpp"
 #include "Instruction.hpp"
 #include "Register.hpp"
@@ -12,9 +13,6 @@
 class Simulator {
 
  private:
-  void load();
-  void store();
-  void move();
   void jump();
   void jumpEqual();
   void jumpAbove();
