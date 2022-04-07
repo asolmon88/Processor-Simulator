@@ -46,6 +46,11 @@ class Simulator {
   int flag; // for comparisons
 
   int branch;
+  // for branch prediction (static)
+  int prediction;
+  int predPC;
+  std::vector<std::vector<Instruction>> predCurrentInstructions;
+  Instruction predCurrentInstruction;
 
   Simulator();
 

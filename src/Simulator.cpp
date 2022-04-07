@@ -9,6 +9,8 @@ Simulator::Simulator() {
   this->numberInstructions = 0;
   this->PC = -1;
   this->branch = 0;
+  this->prediction = 0;
+  this->predPC = 0;
   Register first(0,0);
   registers.push_back(first);
 
@@ -24,6 +26,7 @@ Simulator::Simulator() {
   }
   for (int j = 0; j < 3; ++j) {
     this->currentInstructions.push_back(tempVect);
+    this->predCurrentInstructions.push_back(tempVect);
   }
 }
 
@@ -40,6 +43,13 @@ void Simulator::fetch() {
     for (int i = 0; i < 4; ++i) {
       if (PC < (int)instructions.size()) {
         currentInstructions[0][i] = instructions[PC];
+        if (currentInstructions[0][i].getOpcode() == "ja" ||
+          currentInstructions[0][i].getOpcode() == "je" ||
+          currentInstructions[0][i].getOpcode() == "jb") {
+          this->prediction = 1;
+          BranchUnit::jump(this->predPC, currentInstructions[0][i], 
+            this->sections);
+        }
       } else {
         currentInstructions[0][i].setOpcode("done");
       }
