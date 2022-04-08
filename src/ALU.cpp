@@ -1,5 +1,10 @@
 #include "ALU.hpp"
 
+ALU::ALU() {
+  this->multiplyCycles = 0;
+  this->compareCycles = 0;
+}
+
 void ALU::add(std::vector<Register_t>& registers,
     Instruction& currentInstruction) {
   registers[currentInstruction.getR3()].value =

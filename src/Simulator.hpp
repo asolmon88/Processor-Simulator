@@ -21,6 +21,7 @@ class Simulator {
   void end();
   int find(const std::string&);
   void checkRegisters();
+  void setBusy();
   void printRegisters();
 
  public:
@@ -37,6 +38,13 @@ class Simulator {
   std::vector<Section_t> sections;
   std::vector<Instruction> currentInstructions;
   Instruction currentInstruction;
+
+  // execution Units
+  ALU alu;
+  BranchUnit branchUnit;
+  LSUnit lsUnit;
+
+  int busy;
 
   int finished;
   int cycles;

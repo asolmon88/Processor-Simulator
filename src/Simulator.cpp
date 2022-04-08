@@ -9,6 +9,7 @@ Simulator::Simulator() {
   this->numberInstructions = 0;
   this->PC = -1;
   this->branch = 0;
+  this->busy = 0;
   Register first(0,0);
   registers.push_back(first);
 
@@ -53,42 +54,70 @@ void Simulator::decode() {
   if (currentInstruction->getOpcode() == "end") {
     ++cycles;
   }
-  // std::cout << currentInstruction->getOpcode() << "\t";
+  std::cout << currentInstruction->getOpcode() << "\t";
 }
 
 void Simulator::execute() {
   this->currentInstruction = currentInstructions[2];
   std::string opcode = this->currentInstruction.getOpcode();
   if (opcode == "ld") {
-    LSUnit::load(this->registers, currentInstruction, this->memory);
+    if (lsUnit.loadCycles == 0) {
+      lsUnit.loadCycles = cycles+4;
+    } else if (cycles < lsUnit.loadCycles) {
+      ++cycles;
+    } else {
+      lsUnit.load(this->registers, currentInstruction, this->memory);
+      lsUnit.loadCycles = 0;
+    }
   } else if (opcode == "str") {
-    LSUnit::store(this->registers, currentInstruction, this->memory);
+    lsUnit.store(this->registers, currentInstruction, this->memory);
   } else if (opcode == "mov") {
-    LSUnit::move(this->registers, currentInstruction, this->memory);
+    lsUnit.move(this->registers, currentInstruction, this->memory);
   } else if (opcode == "add") {
-    ALU::add(this->registers, this->currentInstruction);
+    alu.add(this->registers, this->currentInstruction);
   } else if (opcode == "sub") {
-    ALU::substract(this->registers, this->currentInstruction);
+    alu.substract(this->registers, this->currentInstruction);
   } else if (opcode == "mult") {
-    ALU::multiply(this->registers, this->currentInstruction);
+    if (!alu.multiplyCycles) {
+      alu.multiplyCycles = 1;
+      ++cycles;
+    } else {
+      alu.multiply(this->registers, this->currentInstruction);
+      alu.multiplyCycles = 0;
+    }
   } else if (opcode == "cmp") {
-    ALU::compare(this->registers, this->currentInstruction, this->flag);
+    if (!alu.compareCycles) {
+      alu.compareCycles = 1;
+      ++cycles;
+    } else {
+      alu.compare(this->registers, this->currentInstruction, this->flag);
+      alu.compareCycles = 0;
+    }
   } else if (opcode == "jmp") {
-    BranchUnit::jump(this->PC, currentInstruction, this->sections);
+    branchUnit.jump(this->PC, currentInstruction, this->sections);
   } else if (opcode == "je") {
-    BranchUnit::jumpEqual(this->PC, currentInstruction, this->flag, this->sections);
+    branchUnit.jumpEqual(this->PC, currentInstruction, this->flag, this->sections,
+      this->cycles);
   } else if (opcode == "ja") {
-    BranchUnit::jumpAbove(this->PC, currentInstruction, this->flag, this->sections);
+    branchUnit.jumpAbove(this->PC, currentInstruction, this->flag, this->sections,
+      this->cycles);
   } else if (opcode == "jb") {
-    BranchUnit::jumpBelow(this->PC, currentInstruction, this->flag, this->sections);
+    branchUnit.jumpBelow(this->PC, currentInstruction, this->flag, this->sections,
+      this->cycles);
   } else if (opcode == "call") {
-    BranchUnit::call(this->PC, currentInstruction, this->calls, this->callRegister,
-      this->registers, this->sections);
+    if (!branchUnit.callCycles) {
+      branchUnit.callCycles = 1;
+      ++cycles;
+    } else {
+      branchUnit.call(this->PC, currentInstruction, this->calls, this->callRegister,
+        this->registers, this->sections);
+      branchUnit.callCycles = 0;
+    }
   } else if (opcode == "end") {
     end();
     ++cycles;
   }
-  // std::cout << this->currentInstruction.getOpcode() << std::endl;
+  std::cout << this->currentInstruction.getOpcode() << std::endl;
 }
 
 void Simulator::end() {
@@ -120,12 +149,29 @@ void Simulator::printRegisters() {
   cout << endl;
 }
 
+void Simulator::setBusy() {
+  if (lsUnit.loadCycles || alu.compareCycles || alu.multiplyCycles ||
+    branchUnit.callCycles || branchUnit.jaCycles || branchUnit.jbCycles ||
+    branchUnit.jeCycles || branchUnit.jmpCycles) {
+    this->busy = 1;
+  } else {
+    this->busy = 0;
+  }
+}
+
 void Simulator::simulate() {
   while(!finished) {
-    fetch();
-    decode();
+    if (!busy) {
+      fetch();
+      decode();
+    } else {
+      cout << "busy" << "\t" << "busy" << "\t";
+    }
     execute();
-    currentInstructions[2] = currentInstructions[1];
-    currentInstructions[1] = currentInstructions[0];
+    setBusy();
+    if (!busy) {
+      currentInstructions[2] = currentInstructions[1];
+      currentInstructions[1] = currentInstructions[0];
+    }
   }
 }

@@ -1,5 +1,9 @@
 #include "LSUnit.hpp"
 
+LSUnit::LSUnit() {
+  this->loadCycles = 0;
+}
+
 void LSUnit::load(std::vector<Register_t>& registers,
   Instruction& currentInstruction, std::vector<int>& memory) {
   registers[currentInstruction.getR1()].value = 
