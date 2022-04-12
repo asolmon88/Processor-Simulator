@@ -1,8 +1,9 @@
 #ifndef SIMULATOR_
 #define SIMULATOR_
 
-#include <vector>
+#include <queue>
 #include <string>
+#include <vector>
 #include "ALU.hpp"
 #include "BranchUnit.hpp"
 #include "LSUnit.hpp"
@@ -22,10 +23,15 @@ class Simulator {
   int find(const std::string&);
   void checkRegisters();
   void setBusy();
+  int checkScoreboard();
+  void deleteFromExecute(int index);
+  void unableRegisters(Instruction&);
+  void enableRegisters(Instruction&);
   void printRegisters();
 
  public:
   // Registers and memory
+  std::vector<int> scoreboard = std::vector<int>(33);
   std::vector<Register_t> registers;
   std::vector<int> memory = std::vector<int>(1024);
 
@@ -43,6 +49,10 @@ class Simulator {
   ALU alu;
   BranchUnit branchUnit;
   LSUnit lsUnit;
+
+  // execution
+  std::queue<Instruction> readyExecute;
+  std::vector<Instruction> executing;
 
   int busy;
 

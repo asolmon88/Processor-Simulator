@@ -10,16 +10,25 @@ Simulator::Simulator() {
   this->PC = -1;
   this->branch = 0;
   this->busy = 0;
+
   Register first(0,0);
   registers.push_back(first);
 
+  this->scoreboard[0] = 0;
+
+  // fills registers and scoreboard
   for (int i = 1; i < 32; ++i) {
     Register reg((i*32)-32, (i*32)-1);
     registers.push_back(reg);
+    this->scoreboard[i] = 0;
   }
+
+  this->scoreboard[32] = 0;
+
+  // fills the instructions for F,D,E
   Instruction temp;
   temp.setOpcode("");
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 2; ++i) {
     currentInstructions.push_back(temp);
   }
 }
@@ -58,66 +67,118 @@ void Simulator::decode() {
 }
 
 void Simulator::execute() {
-  this->currentInstruction = currentInstructions[2];
-  std::string opcode = this->currentInstruction.getOpcode();
-  if (opcode == "ld") {
-    if (lsUnit.loadCycles == 0) {
-      lsUnit.loadCycles = cycles+4;
-    } else if (cycles < lsUnit.loadCycles) {
-      ++cycles;
-    } else {
-      lsUnit.load(this->registers, currentInstruction, this->memory);
-      lsUnit.loadCycles = 0;
-    }
-  } else if (opcode == "str") {
-    lsUnit.store(this->registers, currentInstruction, this->memory);
-  } else if (opcode == "mov") {
-    lsUnit.move(this->registers, currentInstruction, this->memory);
-  } else if (opcode == "add") {
-    alu.add(this->registers, this->currentInstruction);
-  } else if (opcode == "sub") {
-    alu.substract(this->registers, this->currentInstruction);
-  } else if (opcode == "mult") {
-    if (!alu.multiplyCycles) {
-      alu.multiplyCycles = 1;
-      ++cycles;
-    } else {
-      alu.multiply(this->registers, this->currentInstruction);
-      alu.multiplyCycles = 0;
-    }
-  } else if (opcode == "cmp") {
-    if (!alu.compareCycles) {
-      alu.compareCycles = 1;
-      ++cycles;
-    } else {
-      alu.compare(this->registers, this->currentInstruction, this->flag);
-      alu.compareCycles = 0;
-    }
-  } else if (opcode == "jmp") {
-    branchUnit.jump(this->PC, currentInstruction, this->sections);
-  } else if (opcode == "je") {
-    branchUnit.jumpEqual(this->PC, currentInstruction, this->flag, this->sections,
-      this->cycles);
-  } else if (opcode == "ja") {
-    branchUnit.jumpAbove(this->PC, currentInstruction, this->flag, this->sections,
-      this->cycles);
-  } else if (opcode == "jb") {
-    branchUnit.jumpBelow(this->PC, currentInstruction, this->flag, this->sections,
-      this->cycles);
-  } else if (opcode == "call") {
-    if (!branchUnit.callCycles) {
-      branchUnit.callCycles = 1;
-      ++cycles;
-    } else {
-      branchUnit.call(this->PC, currentInstruction, this->calls, this->callRegister,
-        this->registers, this->sections);
-      branchUnit.callCycles = 0;
-    }
-  } else if (opcode == "end") {
-    end();
-    ++cycles;
+  if (!readyExecute.empty()) {
+    unableRegisters(readyExecute.front());
+    this->executing.push_back(readyExecute.front());
+    readyExecute.pop();
   }
-  std::cout << this->currentInstruction.getOpcode() << std::endl;
+
+  if (this->executing.size() > 1) {
+    cout << "EXECUTING: ";
+    for (int i = 0; i < (int)this->executing.size() ; ++i) {
+      cout << this->executing[i].getOpcode() << ","; 
+    }
+    cout << endl;
+  }
+
+  for (int i = 0; i < (int)this->executing.size() ; ++i) {
+    currentInstruction = this->executing[i];
+    std::string opcode = currentInstruction.getOpcode();
+    if (opcode == "ld") {
+      if (lsUnit.loadCycles == 0) {
+        lsUnit.loadCycles = cycles+4;
+      } else if (cycles < lsUnit.loadCycles) {
+        ++cycles;
+      } else {
+        lsUnit.load(this->registers, currentInstruction, this->memory);
+        lsUnit.loadCycles = 0;
+        enableRegisters(currentInstruction);
+        deleteFromExecute(i);
+      }
+    } else if (opcode == "str") {
+      lsUnit.store(this->registers, currentInstruction, this->memory);
+      enableRegisters(currentInstruction);
+      deleteFromExecute(i);
+    } else if (opcode == "mov") {
+      lsUnit.move(this->registers, currentInstruction, this->memory);
+      enableRegisters(currentInstruction);
+      deleteFromExecute(i);
+    } else if (opcode == "add") {
+      alu.add(this->registers, currentInstruction);
+      enableRegisters(currentInstruction);
+      deleteFromExecute(i);
+    } else if (opcode == "sub") {
+      alu.substract(this->registers, currentInstruction);
+      enableRegisters(currentInstruction);
+      deleteFromExecute(i);
+    } else if (opcode == "mult") {
+      if (!alu.multiplyCycles) {
+        alu.multiplyCycles = 1;
+        ++cycles;
+      } else {
+        alu.multiply(this->registers, currentInstruction);
+        alu.multiplyCycles = 0;
+        enableRegisters(currentInstruction);
+        deleteFromExecute(i);
+      }
+    } else if (opcode == "cmp") {
+      if (!alu.compareCycles) {
+        alu.compareCycles = 1;
+        ++cycles;
+      } else {
+        alu.compare(this->registers, currentInstruction, this->flag);
+        alu.compareCycles = 0;
+        enableRegisters(currentInstruction);
+        deleteFromExecute(i);
+      }
+    } else if (opcode == "jmp") {
+      branchUnit.jump(this->PC, currentInstruction, this->sections);
+      enableRegisters(currentInstruction);
+      deleteFromExecute(i);
+    } else if (opcode == "je") {
+      branchUnit.jumpEqual(this->PC, currentInstruction, this->flag, this->sections,
+        this->cycles);
+      if (!branchUnit.jeCycles) {
+        enableRegisters(currentInstruction);
+        deleteFromExecute(i);
+      }
+    } else if (opcode == "ja") {
+      branchUnit.jumpAbove(this->PC, currentInstruction, this->flag, this->sections,
+        this->cycles);
+      if (!branchUnit.jaCycles) {
+        enableRegisters(currentInstruction);
+        deleteFromExecute(i);
+      }
+    } else if (opcode == "jb") {
+      branchUnit.jumpBelow(this->PC, currentInstruction, this->flag, this->sections,
+        this->cycles);
+      if (!branchUnit.jbCycles) {
+        enableRegisters(currentInstruction);
+        deleteFromExecute(i);
+      }
+    } else if (opcode == "call") {
+      if (!branchUnit.callCycles) {
+        branchUnit.callCycles = 1;
+        ++cycles;
+      } else {
+        branchUnit.call(this->PC, currentInstruction, this->calls, this->callRegister,
+          this->registers, this->sections);
+        branchUnit.callCycles = 0;
+        enableRegisters(currentInstruction);
+        deleteFromExecute(i);
+      }
+    } else if (opcode == "end") {
+      end();
+      enableRegisters(currentInstruction);
+      deleteFromExecute(i);
+      ++cycles;
+    } else {
+      enableRegisters(currentInstruction);
+      deleteFromExecute(i);
+    }
+    if (currentInstruction.getOpcode() != "") {std::cout << 
+      currentInstruction.getOpcode() << ",";}
+  }
 }
 
 void Simulator::end() {
@@ -150,12 +211,75 @@ void Simulator::printRegisters() {
 }
 
 void Simulator::setBusy() {
-  if (lsUnit.loadCycles || alu.compareCycles || alu.multiplyCycles ||
-    branchUnit.callCycles || branchUnit.jaCycles || branchUnit.jbCycles ||
-    branchUnit.jeCycles || branchUnit.jmpCycles) {
+  if (branchUnit.callCycles || branchUnit.jaCycles ||
+    branchUnit.jbCycles || branchUnit.jeCycles ||
+    branchUnit.jmpCycles) {
     this->busy = 1;
+  } else if (lsUnit.loadCycles || alu.compareCycles || alu.multiplyCycles) {
+    this->busy = 2;
   } else {
     this->busy = 0;
+  }
+}
+
+int Simulator::checkScoreboard() {
+  if (currentInstructions[1].getOpcode()[0] != 'j' &&
+    currentInstructions[1].getOpcode() != "call") {
+    if (currentInstructions[1].getR1() != 34) {
+      if (currentInstructions[1].getR2() != 34) {
+        if (currentInstructions[1].getR3() != 34) {
+          if (scoreboard[currentInstructions[1].getR3()] == 1 &&
+            scoreboard[currentInstructions[1].getR1()] == 1 &&
+            scoreboard[currentInstructions[1].getR2()] == 1) {
+            return 1;
+          }
+        } else {
+          if (scoreboard[currentInstructions[1].getR1()] == 1 &&
+            scoreboard[currentInstructions[1].getR2()] == 1) {
+            return 1;
+          }
+        }
+      }
+    } else if (currentInstructions[1].getR2() != 34) {
+      if (scoreboard[currentInstructions[1].getR2()] == 1) {
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
+
+void Simulator::deleteFromExecute(int index) {
+  std::vector<Instruction>::iterator j = this->executing.begin();
+
+  while (j != this->executing.end() && *j != this->executing[index]) {
+    ++j;
+  }
+
+  this->executing.erase(j);
+}
+
+void Simulator::unableRegisters(Instruction& current) {
+  if (current.getR1() != 34) {
+    scoreboard[current.getR1()] = 0;
+  }
+  if (current.getR2() != 34) {
+    scoreboard[current.getR2()] = 0;
+  }
+  if (current.getR3() != 34) {
+    scoreboard[current.getR3()] = 0;
+  }
+}
+
+void Simulator::enableRegisters(Instruction& current) {
+  if (current.getR1() != 34) {
+    scoreboard[current.getR1()] = 1;
+  }
+  if (current.getR2() != 34) {
+    scoreboard[current.getR2()] = 1;
+  }
+  if (current.getR3() != 34) {
+    scoreboard[current.getR3()] = 1;
   }
 }
 
@@ -164,13 +288,22 @@ void Simulator::simulate() {
     if (!busy) {
       fetch();
       decode();
+    } else if (busy == 2) {
+      if (checkScoreboard()) {
+        std::cout << std::endl;
+        readyExecute.push(currentInstructions[1]);
+        currentInstructions[1] = currentInstructions[0];
+        fetch();
+        decode();
+      }
     } else {
       cout << "busy" << "\t" << "busy" << "\t";
     }
     execute();
     setBusy();
     if (!busy) {
-      currentInstructions[2] = currentInstructions[1];
+      std::cout << std::endl;
+      readyExecute.push(currentInstructions[1]);
       currentInstructions[1] = currentInstructions[0];
     }
   }

@@ -92,16 +92,12 @@ ostream& Instruction::print(ostream& output) {
   return output;
 }
 
-Instruction& Instruction::operator=(Instruction& other) {
-  this->opcode = other.getOpcode();
-  this->section = other.getSection();
-  this->value = other.getValue();
-  this->memIndex = other.getMemIndex();
-  this->register1 = other.getR1();
-  this->register2 = other.getR2();
-  this->register3 = other.getR3();
-  this->offset = other.getOffset();
-  this->offsetReg = other.getOffsetReg();
-  this->hasOffsetInFront = other.offsetInFront();
-  return *this;
+int Instruction::operator!=(Instruction& other) {
+  if (this->opcode != other.getOpcode() ||
+    this->register1 != other.getR1() ||
+    this->register2 != other.getR2() ||
+    this->register3 != other.getR3()) {
+    return 1;
+  }
+  return 0;
 }
