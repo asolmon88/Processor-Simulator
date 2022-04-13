@@ -14,16 +14,16 @@ Simulator::Simulator() {
   Register first(0,0);
   registers.push_back(first);
 
-  this->scoreboard[0] = 0;
+  this->scoreboard[0] = 1;
 
   // fills registers and scoreboard
   for (int i = 1; i < 32; ++i) {
     Register reg((i*32)-32, (i*32)-1);
     registers.push_back(reg);
-    this->scoreboard[i] = 0;
+    this->scoreboard[i] = 1;
   }
 
-  this->scoreboard[32] = 0;
+  this->scoreboard[32] = 1;
 
   // fills the instructions for F,D,E
   Instruction temp;
@@ -72,18 +72,13 @@ void Simulator::execute() {
     this->executing.push_back(readyExecute.front());
     readyExecute.pop();
   }
+  int executed = 0;
 
-  if (this->executing.size() > 1) {
-    cout << "EXECUTING: ";
-    for (int i = 0; i < (int)this->executing.size() ; ++i) {
-      cout << this->executing[i].getOpcode() << ","; 
-    }
-    cout << endl;
-  }
-
+  cout << "EXECUTING: ";
   for (int i = 0; i < (int)this->executing.size() ; ++i) {
     currentInstruction = this->executing[i];
     std::string opcode = currentInstruction.getOpcode();
+    cout << opcode << ",";
     if (opcode == "ld") {
       if (lsUnit.loadCycles == 0) {
         lsUnit.loadCycles = cycles+4;
@@ -94,23 +89,28 @@ void Simulator::execute() {
         lsUnit.loadCycles = 0;
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
+        executed = 1;
       }
     } else if (opcode == "str") {
       lsUnit.store(this->registers, currentInstruction, this->memory);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
+      executed = 1;
     } else if (opcode == "mov") {
       lsUnit.move(this->registers, currentInstruction, this->memory);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
+      executed = 1;
     } else if (opcode == "add") {
       alu.add(this->registers, currentInstruction);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
+      executed = 1;
     } else if (opcode == "sub") {
       alu.substract(this->registers, currentInstruction);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
+      executed = 1;
     } else if (opcode == "mult") {
       if (!alu.multiplyCycles) {
         alu.multiplyCycles = 1;
@@ -120,6 +120,7 @@ void Simulator::execute() {
         alu.multiplyCycles = 0;
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
+        executed = 1;
       }
     } else if (opcode == "cmp") {
       if (!alu.compareCycles) {
@@ -130,17 +131,20 @@ void Simulator::execute() {
         alu.compareCycles = 0;
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
+        executed = 1;
       }
     } else if (opcode == "jmp") {
       branchUnit.jump(this->PC, currentInstruction, this->sections);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
+      executed = 1;
     } else if (opcode == "je") {
       branchUnit.jumpEqual(this->PC, currentInstruction, this->flag, this->sections,
         this->cycles);
       if (!branchUnit.jeCycles) {
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
+        executed = 1;
       }
     } else if (opcode == "ja") {
       branchUnit.jumpAbove(this->PC, currentInstruction, this->flag, this->sections,
@@ -148,6 +152,7 @@ void Simulator::execute() {
       if (!branchUnit.jaCycles) {
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
+        executed = 1;
       }
     } else if (opcode == "jb") {
       branchUnit.jumpBelow(this->PC, currentInstruction, this->flag, this->sections,
@@ -155,6 +160,7 @@ void Simulator::execute() {
       if (!branchUnit.jbCycles) {
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
+        executed = 1;
       }
     } else if (opcode == "call") {
       if (!branchUnit.callCycles) {
@@ -166,6 +172,7 @@ void Simulator::execute() {
         branchUnit.callCycles = 0;
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
+        executed = 1;
       }
     } else if (opcode == "end") {
       end();
@@ -175,9 +182,13 @@ void Simulator::execute() {
     } else {
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
+      executed = 1;
     }
-    if (currentInstruction.getOpcode() != "") {std::cout << 
-      currentInstruction.getOpcode() << ",";}
+    if (executed) {
+      executed = 0;
+      i = -1;
+    }
+    /* if (opcode != "") {std::cout << opcode << ",";} */
   }
 }
 
