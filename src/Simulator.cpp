@@ -10,6 +10,7 @@ Simulator::Simulator() {
   this->PC = -1;
   this->branch = 0;
   this->busy = 0;
+  this->IPC = 0;
 
   Register first(0,0);
   registers.push_back(first);
@@ -74,7 +75,8 @@ void Simulator::execute() {
   }
   int executed = 0;
 
-  cout << "EXECUTING: ";
+  IPC = (IPC + this->executing.size())/2;
+
   for (int i = 0; i < (int)this->executing.size() ; ++i) {
     currentInstruction = this->executing[i];
     std::string opcode = currentInstruction.getOpcode();
@@ -304,6 +306,7 @@ void Simulator::simulate() {
         std::cout << std::endl;
         readyExecute.push(currentInstructions[1]);
         currentInstructions[1] = currentInstructions[0];
+        --cycles;
         fetch();
         decode();
       }

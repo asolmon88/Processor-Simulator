@@ -56,6 +56,9 @@ class Simulator {
 
   int busy;
 
+  // instructions per cycle
+  int IPC;
+
   int finished;
   int cycles;
   int numberInstructions;
