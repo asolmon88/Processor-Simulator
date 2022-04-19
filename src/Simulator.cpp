@@ -75,7 +75,7 @@ void Simulator::execute() {
   }
   int executed = 0;
 
-  IPC = (IPC + this->executing.size())/2;
+  IPC = (IPC + (float)this->executing.size())/2;
 
   for (int i = 0; i < (int)this->executing.size() ; ++i) {
     currentInstruction = this->executing[i];
