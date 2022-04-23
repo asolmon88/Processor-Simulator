@@ -11,6 +11,8 @@ Simulator::Simulator() {
   this->branch = 0;
   this->busy = 0;
   this->IPC = 0;
+  this->OoO = 0;
+  this->TI = 0;
 
   Register first(0,0);
   registers.push_back(first);
@@ -29,58 +31,146 @@ Simulator::Simulator() {
   // fills the instructions for F,D,E
   Instruction temp;
   temp.setOpcode("");
-  for (int i = 0; i < 2; ++i) {
-    currentInstructions.push_back(temp);
+  std::vector<Instruction> tempVect;
+  for (int i = 0; i < 4; ++i) {
+    tempVect.push_back(temp);
   }
+  tempVect.shrink_to_fit();
+  for (int j = 0; j < 2; ++j) {
+    this->currentInstructions.push_back(tempVect);
+  }
+  this->currentInstructions.shrink_to_fit();
 }
 
 void Simulator::fetch() {
   ++PC;
-  if (branch) {
-    currentInstructions[0].setOpcode("wait"); // this is how it waits
-    branch = 0;
-    PC -= 2;
-    ++cycles;
-  } else if (PC < (int)instructions.size()) {
-    currentInstructions[0] = instructions[PC];
-    ++cycles;
+  if (!this->OoO) {
+    if (branch) {
+      for (int i = 0; i < 4; ++i) {
+        currentInstructions[0][i].setOpcode("wait"); // this is how it waits
+      }
+      branch = 0;
+      PC -= 5;
+      ++cycles;
+    } else if (PC < (int)instructions.size()) {
+      for (int i = 0; i < 4; ++i) {
+        if (PC < (int)instructions.size()) {
+          currentInstructions[0][i] = instructions[PC];
+        } else {
+          currentInstructions[0][i].setOpcode("done");
+        }
+        ++PC;
+      }
+      --PC;
+      ++cycles;
+    } else {
+      for (int i = 0; i < 4; ++i) {
+        currentInstructions[0][i].setOpcode("done");
+      }
+    }
   } else {
-    currentInstructions[0].setOpcode("done");
+    if (PC < (int)instructions.size()) {
+      currentInstructions[0][3] = instructions[PC];
+    } else {
+      currentInstructions[0][3].setOpcode("done");
+    }
+    ++cycles;
   }
-  cout << currentInstructions[0].getOpcode() << "\t";
+  // cout << currentInstructions[0].getOpcode() << "\t";
 }
 void Simulator::decode() {
-  Instruction* currentInstruction = &currentInstructions[1];
-  /* std::cout << "\nFLAG: " << flag << std::endl;
-  sleep(1); */
-  if (currentInstruction->getOpcode() == "jmp" ||
-    currentInstruction->getOpcode() == "ja" ||
-    currentInstruction->getOpcode() == "je" ||
-    currentInstruction->getOpcode() == "jb" ||
-    currentInstruction->getOpcode() == "call") {
-    currentInstructions[0].setOpcode("wait"); // this is how it waits
-    this->branch = 1;
+  if (!this->OoO) {
+    for (int i = 0; i < 4; ++i) {
+      Instruction* currentInstruction = &currentInstructions[1][i];
+      /* std::cout << "\nFLAG: " << flag << std::endl;
+      sleep(1); */
+      if (branch) {
+        currentInstruction->setOpcode("wait");
+      } else if (currentInstruction->getOpcode() == "jmp" ||
+        currentInstruction->getOpcode() == "ja" ||
+        currentInstruction->getOpcode() == "je" ||
+        currentInstruction->getOpcode() == "jb" ||
+        currentInstruction->getOpcode() == "call") {
+        currentInstructions[0][0].setOpcode("wait");
+        currentInstructions[0][1].setOpcode("wait");
+        currentInstructions[0][2].setOpcode("wait");
+        currentInstructions[0][3].setOpcode("wait"); // this is how it waits
+        this->PC -= 3 - i;
+        this->branch = 1;
+      }
+      if (currentInstruction->getOpcode() == "end") {
+        ++cycles;
+      }
+      // std::cout << currentInstruction->getOpcode() << "\t";
+    }
+  } else {
+    Instruction* currentInstruction = &currentInstructions[1][3];
+    /* std::cout << "\nFLAG: " << flag << std::endl;
+    sleep(1); */
+    if (branch) {
+      currentInstruction->setOpcode("wait");
+    } else if (currentInstruction->getOpcode() == "jmp" ||
+      currentInstruction->getOpcode() == "ja" ||
+      currentInstruction->getOpcode() == "je" ||
+      currentInstruction->getOpcode() == "jb" ||
+      currentInstruction->getOpcode() == "call") {
+      currentInstructions[0][0].setOpcode("wait");
+      currentInstructions[0][1].setOpcode("wait");
+      currentInstructions[0][2].setOpcode("wait");
+      currentInstructions[0][3].setOpcode("wait"); // this is how it waits
+      this->branch = 1;
+    }
+    if (currentInstruction->getOpcode() == "end") {
+      ++cycles;
+    }
   }
-  if (currentInstruction->getOpcode() == "end") {
-    ++cycles;
-  }
-  std::cout << currentInstruction->getOpcode() << "\t";
+  // std::cout << currentInstruction->getOpcode() << "\t";
 }
 
 void Simulator::execute() {
-  if (!readyExecute.empty()) {
-    unableRegisters(readyExecute.front());
+  std::vector<int> temp = std::vector<int>(3);
+  temp[0] = 0;  // flag to know if it executed
+  temp[1] = 0;  // flag to know if it's OoO (1) or normal (0)
+  temp[2] = this->TI;  // just to differentiate from others
+  while (!readyExecute.empty()) {
+    if (this->OoO) {
+      temp[1] = 1;
+    } else {
+      temp[1] = 0;
+      this->OoO = 0;
+    }
+    this->executed.push_back(temp);
     this->executing.push_back(readyExecute.front());
     readyExecute.pop();
   }
-  int executed = 0;
+  // to print
+  std::cout << "Fetch\tDecode\tExecute" << std::endl;
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 2; ++j) {
+      std::cout << this->currentInstructions[j][i].getOpcode() << "\t";
+    }
+    if (i < (int)this->executing.size()) {
+      std::cout << this->executing[i].getOpcode();
+    }
+    std::cout << std::endl;
+  }
+  if (this->executing.size() > 4) {
+    std::cout << "EXECUTING: ";
+    for (int k = 4; k < (int)this->executing.size(); ++k) {
+      std::cout << this->executing[k].getOpcode() << ",";
+    }
+    std::cout << std::endl;
+  }
+  std::cout << "--------------------------------" << std::endl;
+  // sleep(3);
 
   IPC = (IPC + (float)this->executing.size())/2;
 
   for (int i = 0; i < (int)this->executing.size() ; ++i) {
     currentInstruction = this->executing[i];
+    unableRegisters(currentInstruction);
     std::string opcode = currentInstruction.getOpcode();
-    cout << opcode << ",";
+    // cout << opcode << ",";
     if (opcode == "ld") {
       if (lsUnit.loadCycles == 0) {
         lsUnit.loadCycles = cycles+4;
@@ -91,28 +181,28 @@ void Simulator::execute() {
         lsUnit.loadCycles = 0;
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
-        executed = 1;
+        executed[i][0] = 1;
       }
     } else if (opcode == "str") {
       lsUnit.store(this->registers, currentInstruction, this->memory);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
-      executed = 1;
+      executed[i][0] = 1;
     } else if (opcode == "mov") {
       lsUnit.move(this->registers, currentInstruction, this->memory);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
-      executed = 1;
+      executed[i][0] = 1;
     } else if (opcode == "add") {
       alu.add(this->registers, currentInstruction);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
-      executed = 1;
+      executed[i][0] = 1;
     } else if (opcode == "sub") {
       alu.substract(this->registers, currentInstruction);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
-      executed = 1;
+      executed[i][0] = 1;
     } else if (opcode == "mult") {
       if (!alu.multiplyCycles) {
         alu.multiplyCycles = 1;
@@ -122,7 +212,7 @@ void Simulator::execute() {
         alu.multiplyCycles = 0;
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
-        executed = 1;
+        executed[i][0] = 1;
       }
     } else if (opcode == "cmp") {
       if (!alu.compareCycles) {
@@ -133,20 +223,20 @@ void Simulator::execute() {
         alu.compareCycles = 0;
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
-        executed = 1;
+        executed[i][0] = 1;
       }
     } else if (opcode == "jmp") {
       branchUnit.jump(this->PC, currentInstruction, this->sections);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
-      executed = 1;
+      executed[i][0] = 1;
     } else if (opcode == "je") {
       branchUnit.jumpEqual(this->PC, currentInstruction, this->flag, this->sections,
         this->cycles);
       if (!branchUnit.jeCycles) {
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
-        executed = 1;
+        executed[i][0] = 1;
       }
     } else if (opcode == "ja") {
       branchUnit.jumpAbove(this->PC, currentInstruction, this->flag, this->sections,
@@ -154,7 +244,7 @@ void Simulator::execute() {
       if (!branchUnit.jaCycles) {
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
-        executed = 1;
+        executed[i][0] = 1;
       }
     } else if (opcode == "jb") {
       branchUnit.jumpBelow(this->PC, currentInstruction, this->flag, this->sections,
@@ -162,7 +252,7 @@ void Simulator::execute() {
       if (!branchUnit.jbCycles) {
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
-        executed = 1;
+        executed[i][0] = 1;
       }
     } else if (opcode == "call") {
       if (!branchUnit.callCycles) {
@@ -174,7 +264,7 @@ void Simulator::execute() {
         branchUnit.callCycles = 0;
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
-        executed = 1;
+        executed[i][0] = 1;
       }
     } else if (opcode == "end") {
       end();
@@ -184,11 +274,26 @@ void Simulator::execute() {
     } else {
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
-      executed = 1;
+      executed[i][0] = 1;
     }
-    if (executed) {
-      executed = 0;
+    if (executed[i][0]) {
+      deleteFromExecute(i,1);
+      ++this->TI;
       i = -1;
+    } else {
+      int k = i;
+      int found = 0;
+      ++k;
+      while (k < (int)this->executing.size() && !found) {
+        if (this->executed[k][1] == 1) {
+          i = k-1;
+          found = 1;
+        }
+        ++k;
+      }
+      if (!found) {
+        break;
+      }
     }
     /* if (opcode != "") {std::cout << opcode << ",";} */
   }
@@ -236,25 +341,25 @@ void Simulator::setBusy() {
 }
 
 int Simulator::checkScoreboard() {
-  if (currentInstructions[1].getOpcode()[0] != 'j' &&
-    currentInstructions[1].getOpcode() != "call") {
-    if (currentInstructions[1].getR1() != 34) {
-      if (currentInstructions[1].getR2() != 34) {
-        if (currentInstructions[1].getR3() != 34) {
-          if (scoreboard[currentInstructions[1].getR3()] == 1 &&
-            scoreboard[currentInstructions[1].getR1()] == 1 &&
-            scoreboard[currentInstructions[1].getR2()] == 1) {
+  if (currentInstructions[1][0].getOpcode()[0] != 'j' &&
+    currentInstructions[1][0].getOpcode() != "call") {
+    if (currentInstructions[1][0].getR1() != 34) {
+      if (currentInstructions[1][0].getR2() != 34) {
+        if (currentInstructions[1][0].getR3() != 34) {
+          if (scoreboard[currentInstructions[1][0].getR3()] == 1 &&
+            scoreboard[currentInstructions[1][0].getR1()] == 1 &&
+            scoreboard[currentInstructions[1][0].getR2()] == 1) {
             return 1;
           }
         } else {
-          if (scoreboard[currentInstructions[1].getR1()] == 1 &&
-            scoreboard[currentInstructions[1].getR2()] == 1) {
+          if (scoreboard[currentInstructions[1][0].getR1()] == 1 &&
+            scoreboard[currentInstructions[1][0].getR2()] == 1) {
             return 1;
           }
         }
       }
-    } else if (currentInstructions[1].getR2() != 34) {
-      if (scoreboard[currentInstructions[1].getR2()] == 1) {
+    } else if (currentInstructions[1][0].getR2() != 34) {
+      if (scoreboard[currentInstructions[1][0].getR2()] == 1) {
         return 1;
       }
     }
@@ -262,14 +367,41 @@ int Simulator::checkScoreboard() {
   return 0;
 }
 
-void Simulator::deleteFromExecute(int index) {
-  std::vector<Instruction>::iterator j = this->executing.begin();
+void Simulator::deleteFromExecute(int index, int array) {
+  if (!array) {
+    std::vector<Instruction>::iterator j = this->executing.begin();
 
-  while (j != this->executing.end() && *j != this->executing[index]) {
-    ++j;
+    while (j != this->executing.end() && *j != this->executing[index]) {
+      ++j;
+    }
+
+    this->executing.erase(j);
+  } else {
+    std::vector<std::vector<int>>::iterator j = this->executed.begin();
+
+    while (j != this->executed.end() &&
+      ((*j)[0] != this->executed[index][0] ||
+      (*j)[1] != this->executed[index][1] ||
+      (*j)[2] != this->executed[index][2])) {
+      ++j;
+    }
+
+    this->executed.erase(j);
   }
+}
 
-  this->executing.erase(j);
+void Simulator::orderInstructions(int stage) {
+  if (stage) {
+    // decode
+    for (int i = 0; i < 3; ++i) {
+      currentInstructions[1][i] = currentInstructions[1][i+1];
+    }
+  } else {
+    // fetch
+    for (int i = 0; i < 3; ++i) {
+      currentInstructions[0][i] = currentInstructions[0][i+1];
+    }
+  }
 }
 
 void Simulator::unableRegisters(Instruction& current) {
@@ -298,15 +430,18 @@ void Simulator::enableRegisters(Instruction& current) {
 
 void Simulator::simulate() {
   while(!finished) {
+    std::cout << "CYCLE: " << this->cycles << std::endl;
     if (!busy) {
       fetch();
       decode();
     } else if (busy == 2) {
       if (checkScoreboard()) {
-        std::cout << std::endl;
-        readyExecute.push(currentInstructions[1]);
-        currentInstructions[1] = currentInstructions[0];
+        readyExecute.push(currentInstructions[1][0]);
         --cycles;
+        this->OoO = 1;
+        orderInstructions(1);  // decode
+        currentInstructions[1][3] = currentInstructions[0][0];
+        orderInstructions(0);  // fetch
         fetch();
         decode();
       }
@@ -316,9 +451,11 @@ void Simulator::simulate() {
     execute();
     setBusy();
     if (!busy) {
-      std::cout << std::endl;
-      readyExecute.push(currentInstructions[1]);
+      for (int i = 0; i < 4; ++i) {
+        readyExecute.push(currentInstructions[1][i]);
+      }
       currentInstructions[1] = currentInstructions[0];
     }
   }
+  printRegisters();
 }

@@ -24,9 +24,10 @@ class Simulator {
   void checkRegisters();
   void setBusy();
   int checkScoreboard();
-  void deleteFromExecute(int index);
+  void deleteFromExecute(int index, int array = 0);
   void unableRegisters(Instruction&);
   void enableRegisters(Instruction&);
+  void orderInstructions(int stage);  // stage 0 fetch, stage 1 decode
   void printRegisters();
 
  public:
@@ -42,7 +43,7 @@ class Simulator {
   // To handle instructions
   std::vector<Instruction> instructions;
   std::vector<Section_t> sections;
-  std::vector<Instruction> currentInstructions;
+  std::vector<std::vector<Instruction>> currentInstructions;
   Instruction currentInstruction;
 
   // execution Units
@@ -53,11 +54,15 @@ class Simulator {
   // execution
   std::queue<Instruction> readyExecute;
   std::vector<Instruction> executing;
+  int OoO;
+  std::vector<std::vector<int>> executed;
 
   int busy;
 
   // instructions per cycle
   float IPC;
+  // total instructions
+  int TI;
 
   int finished;
   int cycles;

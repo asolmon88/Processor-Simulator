@@ -1,8 +1,14 @@
 mov 3, R1
 mov 4, R2
 
+str 2, R1
+str 3, R2
+
 mov 1, R6
 mov 1, R7
+
+ld 2, R5
+ld 3, R8
 
 mov R1, R3
 mov R2, R4
