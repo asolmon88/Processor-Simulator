@@ -18,9 +18,9 @@ int main() {
   std::cout << simulator.registers[2] << std::endl;
   std::cout << "_________________________________" << std::endl;
   std::cout << "STATISTICS" << std::endl;
-  std::cout << "T.I.\tCycles\tI.P.C" << std::endl;
+  std::cout << "T.I.\tCycles\tI.P.C\tC.B." << std::endl;
   std::cout << simulator.TI << "\t" << simulator.cycles << "\t"
-    << simulator.IPC << "\t" << std::endl;
+    << simulator.IPC << "\t" << simulator.correctPredictions << std::endl;
   std::cout << "_________________________________" << std::endl;
 
 

@@ -13,6 +13,9 @@ Simulator::Simulator() {
   this->IPC = 0;
   this->OoO = 0;
   this->TI = 0;
+  this->prediction = 0;
+  this->correctPredictions = 0;
+  this->changePC = 0;
 
   Register first(0,0);
   registers.push_back(first);
@@ -59,6 +62,12 @@ void Simulator::fetch() {
         } else {
           currentInstructions[0][i].setOpcode("done");
         }
+        preDecode(currentInstructions[0][i]);
+        if (this->changePC) {
+          this->previousPC.push(this->PC);
+          this->PC = this->predPC.back();
+          this->changePC = 0;
+        }
         ++PC;
       }
       --PC;
@@ -82,21 +91,17 @@ void Simulator::decode() {
   if (!this->OoO) {
     for (int i = 0; i < 4; ++i) {
       Instruction* currentInstruction = &currentInstructions[1][i];
-      /* std::cout << "\nFLAG: " << flag << std::endl;
-      sleep(1); */
       if (branch) {
         currentInstruction->setOpcode("wait");
-      } else if (currentInstruction->getOpcode() == "jmp" ||
-        currentInstruction->getOpcode() == "ja" ||
-        currentInstruction->getOpcode() == "je" ||
-        currentInstruction->getOpcode() == "jb" ||
-        currentInstruction->getOpcode() == "call") {
+      } else if (currentInstruction->getOpcode() == "call") {
         currentInstructions[0][0].setOpcode("wait");
         currentInstructions[0][1].setOpcode("wait");
         currentInstructions[0][2].setOpcode("wait");
         currentInstructions[0][3].setOpcode("wait"); // this is how it waits
-        this->PC -= 3 - i;
+        this->PC = this->callPC;
         this->branch = 1;
+        this->predPC = std::queue<int>();
+        this->previousPC = std::queue<int>();
       }
       if (currentInstruction->getOpcode() == "end") {
         ++cycles;
@@ -109,16 +114,14 @@ void Simulator::decode() {
     sleep(1); */
     if (branch) {
       currentInstruction->setOpcode("wait");
-    } else if (currentInstruction->getOpcode() == "jmp" ||
-      currentInstruction->getOpcode() == "ja" ||
-      currentInstruction->getOpcode() == "je" ||
-      currentInstruction->getOpcode() == "jb" ||
-      currentInstruction->getOpcode() == "call") {
+    } else if (currentInstruction->getOpcode() == "call") {
       currentInstructions[0][0].setOpcode("wait");
       currentInstructions[0][1].setOpcode("wait");
       currentInstructions[0][2].setOpcode("wait");
       currentInstructions[0][3].setOpcode("wait"); // this is how it waits
       this->branch = 1;
+      this->predPC = std::queue<int>();
+      this->previousPC = std::queue<int>();
     }
     if (currentInstruction->getOpcode() == "end") {
       ++cycles;
@@ -162,10 +165,10 @@ void Simulator::execute() {
     std::cout << std::endl;
   }
   std::cout << "--------------------------------" << std::endl;
-  // sleep(3);
+  //sleep(3);
 
   IPC = (IPC + (float)this->executing.size())/2;
-
+  int branchExecuted = 0;
   for (int i = 0; i < (int)this->executing.size() ; ++i) {
     currentInstruction = this->executing[i];
     unableRegisters(currentInstruction);
@@ -226,42 +229,56 @@ void Simulator::execute() {
         executed[i][0] = 1;
       }
     } else if (opcode == "jmp") {
+      this->currentPC = this->PC;
       branchUnit.jump(this->PC, currentInstruction, this->sections);
       enableRegisters(currentInstruction);
       deleteFromExecute(i);
       executed[i][0] = 1;
+      this->PC = this->currentPC;
+      this->predPC.pop();
+      this->previousPC.pop();
     } else if (opcode == "je") {
-      branchUnit.jumpEqual(this->PC, currentInstruction, this->flag, this->sections,
-        this->cycles);
+      this->currentPC = this->PC;
+      branchExecuted = branchUnit.jumpEqual(this->PC, currentInstruction,
+        this->flag, this->sections, this->cycles);
       if (!branchUnit.jeCycles) {
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
         executed[i][0] = 1;
+        checkPrediction(i, branchExecuted);
       }
     } else if (opcode == "ja") {
-      branchUnit.jumpAbove(this->PC, currentInstruction, this->flag, this->sections,
+      this->currentPC = this->PC;
+      branchExecuted = branchUnit.jumpAbove(this->PC, currentInstruction, this->flag, this->sections,
         this->cycles);
       if (!branchUnit.jaCycles) {
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
         executed[i][0] = 1;
+        checkPrediction(i, branchExecuted);
       }
     } else if (opcode == "jb") {
-      branchUnit.jumpBelow(this->PC, currentInstruction, this->flag, this->sections,
+      this->currentPC = this->PC;
+      branchExecuted = branchUnit.jumpBelow(this->PC, currentInstruction, this->flag, this->sections,
         this->cycles);
       if (!branchUnit.jbCycles) {
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
         executed[i][0] = 1;
+        checkPrediction(i, branchExecuted);
       }
     } else if (opcode == "call") {
       if (!branchUnit.callCycles) {
         branchUnit.callCycles = 1;
         ++cycles;
       } else {
+        this->PC = this->callPC;
+        this->callPC = 0;
         branchUnit.call(this->PC, currentInstruction, this->calls, this->callRegister,
           this->registers, this->sections);
         branchUnit.callCycles = 0;
+        this->previousPCRec.push_back(this->previousPC);
+        this->predPCRec.push_back(this->predPC);
         enableRegisters(currentInstruction);
         deleteFromExecute(i);
         executed[i][0] = 1;
@@ -299,18 +316,79 @@ void Simulator::execute() {
   }
 }
 
+void Simulator::preDecode(Instruction& current) {
+  if (current.getOpcode() == "jmp") {
+    this->changePC = 2;
+    this->predPC.push(branchUnit.find(current.getSection(),
+      sections)-1);
+  } else if (current.getOpcode() == "ja" ||
+    current.getOpcode() == "je" ||
+    current.getOpcode() == "jb") {
+    this->prediction = 1;
+    this->changePC = 1;
+    this->predPC.push(branchUnit.find(current.getSection(),
+      sections)-1);
+  } else if (current.getOpcode() == "call") {
+    if (!this->callPC) {
+      this->callPC = this->PC;
+    }
+  }
+}
+
 void Simulator::end() {
   /* printRegisters();
   sleep(10); */
   if (!this->calls.empty()) {
     checkRegisters();
-    PC = this->calls.back();
+    this->PC = this->calls.back();
     this->registers = this->callRegister.back();
+    this->previousPC = this->previousPCRec.back();
+    this->predPC = this->predPCRec.back();
     this->calls.pop_back();
     this->callRegister.pop_back();
+    this->previousPCRec.pop_back();
+    this->predPCRec.pop_back();
   } else {
-    finished = 1;
+    this->finished = 1;
   }
+}
+
+int Simulator::correctPrediction() {
+  return this->PC == this->predPC.front();
+}
+
+void Simulator::checkPrediction(int i, int branchExecuted) {
+  if (branchExecuted) {
+    if (correctPrediction()) {
+      this->PC = this->currentPC;
+      ++correctPredictions;
+    } else {
+      this->PC = this->previousPC.front();
+      for (int k = 0; k < 4; ++k) {
+        for (int j = 0; j < 2; ++j) {
+          this->currentInstructions[j][k].setOpcode("wait");
+        }
+      }
+      for (int j = i+1; j < (int)this->executing.size(); ++j) {
+        this->executing[j].setOpcode("wait");
+      }
+      this->previousPC = std::queue<int>();
+      this->predPC = std::queue<int>();
+    }
+  } else {
+    this->PC = this->previousPC.front();
+    for (int k = 0; k < 4; ++k) {
+      for (int j = 0; j < 2; ++j) {
+        this->currentInstructions[j][k].setOpcode("wait");
+      }
+    }
+    for (int j = i+1; j < (int)this->executing.size(); ++j) {
+      this->executing[j].setOpcode("wait");
+    }
+    this->previousPC = std::queue<int>();
+    this->predPC = std::queue<int>();
+  }
+  this->prediction = 0;
 }
 
 void Simulator::checkRegisters() {
@@ -431,7 +509,7 @@ void Simulator::enableRegisters(Instruction& current) {
 void Simulator::simulate() {
   while(!finished) {
     std::cout << "CYCLE: " << this->cycles << std::endl;
-    if (!busy) {
+    if (!busy || prediction) {
       fetch();
       decode();
     } else if (busy == 2) {

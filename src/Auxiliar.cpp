@@ -142,7 +142,7 @@ int Auxiliar::saveSection(std::vector<Section_t>& sections, std::string instruct
 void Auxiliar::getInstructions(std::vector<Instruction>& instructions,
     std::vector<Section_t>& sections) {
   std::vector<std::string> readInstructions;
-  Auxiliar::readFile("/home/ariel/Documents/CA/Processor-Simulator/tests/OoOTest.txt",
+  Auxiliar::readFile("/home/ariel/Documents/CA/Processor-Simulator/tests/sum.txt",
     readInstructions);
   size_t currentInstructionIndex = 0;
   for (size_t i = 0; i < readInstructions.size(); ++i) {

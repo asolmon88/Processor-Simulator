@@ -9,3 +9,7 @@ run: main
 .PHONY: clean
 clean:
 	rm -f main
+
+.PHONY: memcheck
+memcheck: main
+	valgrind --tool=memcheck --leak-check=full ./main

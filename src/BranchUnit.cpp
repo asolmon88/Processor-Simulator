@@ -12,7 +12,7 @@ void BranchUnit::jump(int& PC, Instruction& currentInstruction,
   std::vector<Section_t>& sections) {
   PC = find(currentInstruction.getSection(), sections)-1;
 }
-void BranchUnit::jumpEqual(int& PC, Instruction& currentInstruction,
+int BranchUnit::jumpEqual(int& PC, Instruction& currentInstruction,
   int& flag, std::vector<Section_t>& sections, int& cycles) {
   if (!flag) {
     if (!this->jeCycles) {
@@ -21,10 +21,12 @@ void BranchUnit::jumpEqual(int& PC, Instruction& currentInstruction,
     } else {
       jump(PC, currentInstruction, sections);
       this->jeCycles = 0;
+      return 1;
     }
   }
+  return 0;
 }
-void BranchUnit::jumpAbove(int& PC, Instruction& currentInstruction,
+int BranchUnit::jumpAbove(int& PC, Instruction& currentInstruction,
   int& flag, std::vector<Section_t>& sections, int& cycles) {
   if (flag > 0) {
     if (!this->jaCycles) {
@@ -33,10 +35,12 @@ void BranchUnit::jumpAbove(int& PC, Instruction& currentInstruction,
     } else {
       jump(PC, currentInstruction, sections);
       this->jaCycles = 0;
+      return 1;
     }
   }
+  return 0;
 }
-void BranchUnit::jumpBelow(int& PC, Instruction& currentInstruction,
+int BranchUnit::jumpBelow(int& PC, Instruction& currentInstruction,
   int& flag, std::vector<Section_t>& sections, int& cycles) {
   if (flag < 0) {
     if (!this->jbCycles) {
@@ -45,8 +49,10 @@ void BranchUnit::jumpBelow(int& PC, Instruction& currentInstruction,
     } else {
       jump(PC, currentInstruction, sections);
       this->jbCycles = 0;
+      return 1;
     }
   }
+  return 0;
 }
 void BranchUnit::call(int& PC, Instruction& currentInstruction,
   std::vector<int>& calls,
