@@ -7,15 +7,19 @@
 #include "Section.hpp"
 #include "Simulator.hpp"
 
-int main() {
+int main(int argc, char** argv) {
 
   Simulator simulator;
 
-  Auxiliar::getInstructions(simulator.instructions, simulator.sections);
+  if (argc > 1) {
+    Auxiliar::getInstructions(simulator.instructions, simulator.sections,
+      argv[1]);
+  } else {
+    Auxiliar::getInstructions(simulator.instructions, simulator.sections);
+  }
 
   simulator.simulate();
 
-  std::cout << simulator.registers[2] << std::endl;
   std::cout << "_________________________________" << std::endl;
   std::cout << "STATISTICS" << std::endl;
   std::cout << "T.I.\tCycles\tI.P.C\tC.B." << std::endl;
@@ -23,9 +27,5 @@ int main() {
     << simulator.IPC << "\t" << simulator.correctPredictions << std::endl;
   std::cout << "_________________________________" << std::endl;
 
-
- /*  for (auto x : simulator.instructions) {
-    cout << x << endl;
-  } */
   return 0;
 }

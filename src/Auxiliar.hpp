@@ -19,7 +19,7 @@ class Auxiliar {
    static int saveSection(std::vector<Section_t>& sections, std::string instruction,
     int index);
    static void getInstructions(std::vector<Instruction>& instructions,
-    std::vector<Section_t>& sections);
+    std::vector<Section_t>& sections, const char* filename = "sum");
 };
 
 #endif  // AUXILIAR_H_

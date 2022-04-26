@@ -523,8 +523,6 @@ void Simulator::simulate() {
         fetch();
         decode();
       }
-    } else {
-      cout << "busy" << "\t" << "busy" << "\t";
     }
     execute();
     setBusy();
