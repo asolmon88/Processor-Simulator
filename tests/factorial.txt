@@ -1,0 +1,14 @@
+mov 8, R1
+mov 1, R3
+mov 1, R4
+mov 1, R2
+
+factorial:
+  mult R2, R3, R2
+  add R4, R3, R3
+  cmp R1, R3
+  ja finish
+  jmp factorial
+
+finish:
+end

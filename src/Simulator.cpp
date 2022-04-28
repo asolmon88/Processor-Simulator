@@ -168,7 +168,7 @@ void Simulator::execute() {
   //sleep(3);
 
   IPC = (IPC + (float)this->executing.size())/2;
-  int branchExecuted = 0;
+  int branchExecuted = -1;
   for (int i = 0; i < (int)this->executing.size() ; ++i) {
     currentInstruction = this->executing[i];
     unableRegisters(currentInstruction);
@@ -293,7 +293,9 @@ void Simulator::execute() {
       deleteFromExecute(i);
       executed[i][0] = 1;
     }
-    if (executed[i][0]) {
+    if (!branchExecuted) {
+      break;
+    } else if (executed[i][0]) {
       deleteFromExecute(i,1);
       ++this->TI;
       i = -1;
@@ -369,7 +371,7 @@ void Simulator::checkPrediction(int i, int branchExecuted) {
           this->currentInstructions[j][k].setOpcode("wait");
         }
       }
-      for (int j = i+1; j < (int)this->executing.size(); ++j) {
+      for (int j = i; j < (int)this->executing.size(); ++j) {
         this->executing[j].setOpcode("wait");
       }
       this->previousPC = std::queue<int>();
@@ -382,7 +384,7 @@ void Simulator::checkPrediction(int i, int branchExecuted) {
         this->currentInstructions[j][k].setOpcode("wait");
       }
     }
-    for (int j = i+1; j < (int)this->executing.size(); ++j) {
+    for (int j = i; j < (int)this->executing.size(); ++j) {
       this->executing[j].setOpcode("wait");
     }
     this->previousPC = std::queue<int>();
