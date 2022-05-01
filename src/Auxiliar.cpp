@@ -39,7 +39,7 @@ int Auxiliar::isInstruction(std::string instruction) {
 }
 
 void Auxiliar::saveInstructions(
-  std::vector<Instruction>& instructions, std::string instruction) {
+  std::vector<Instruction>& instructions, std::string instruction, int& moves) {
   std::string currentText;
   std::vector<std::string> separated;
   Instruction newInstruction;
@@ -70,6 +70,12 @@ void Auxiliar::saveInstructions(
     }
     instructions.push_back(newInstruction);
   } else if (currentText == "mov") {
+    ++moves;
+    if (moves == 1) {
+      for (auto x : separated) {
+        cout << x << endl;
+      }
+    }
     if (separated.size() > 3) {
       if (stoi(separated[4]) < 5) {
         newInstruction.setOffsetLocation(1);
@@ -93,6 +99,9 @@ void Auxiliar::saveInstructions(
           newInstruction.setValue(stoi(separated[1]));
           newInstruction.setReg2(separated[2]);
         }
+      }
+      if (moves == 1) {
+        cout << newInstruction << endl;
       }
     } else if (separated[1][0] == 'R') {
       newInstruction.setReg1(separated[1]);
@@ -148,11 +157,12 @@ void Auxiliar::getInstructions(std::vector<Instruction>& instructions,
   Auxiliar::readFile(file.c_str(),
     readInstructions);
   size_t currentInstructionIndex = 0;
+  int moves = 0;
   for (size_t i = 0; i < readInstructions.size(); ++i) {
     if ((readInstructions[i] != "\n") && (readInstructions[i] != "\t") &&
     (readInstructions[i] != "") && (readInstructions[i] != " ")) {
       if (Auxiliar::isInstruction(readInstructions[i]) == -1) {
-        Auxiliar::saveInstructions(instructions, readInstructions[i]);
+        Auxiliar::saveInstructions(instructions, readInstructions[i], moves);
         ++currentInstructionIndex;
       } else {
         if (Auxiliar::saveSection(sections, readInstructions[i], currentInstructionIndex)
@@ -174,6 +184,11 @@ void Auxiliar::separate(std::string line, std::vector<std::string>& separated) {
   std::string word = "";
   int index = 0; // index where [ was found
   int notFound = 1;
+  std::string::iterator i = line.begin();
+  while (*i == ' ' || *i == '\t') {
+    line.erase(i);
+    ++i;
+  }
   for (auto x : line) {
     if (x != '[' && notFound) {
       ++index;

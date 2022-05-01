@@ -165,6 +165,7 @@ void Simulator::execute() {
     std::cout << std::endl;
   }
   std::cout << "--------------------------------" << std::endl;
+  printRegisters();
   //sleep(3);
 
   IPC = (IPC + (float)this->executing.size())/2;

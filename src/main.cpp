@@ -17,7 +17,10 @@ int main(int argc, char** argv) {
   } else {
     Auxiliar::getInstructions(simulator.instructions, simulator.sections);
   }
-
+  
+  /* for (auto x : simulator.instructions) {
+    cout << x << endl;
+  } */
   simulator.simulate();
 
   std::cout << "_________________________________" << std::endl;
@@ -26,6 +29,13 @@ int main(int argc, char** argv) {
   std::cout << simulator.TI << "\t" << simulator.cycles << "\t"
     << simulator.IPC << "\t" << simulator.correctPredictions << std::endl;
   std::cout << "_________________________________" << std::endl;
+
+
+  cout << endl;
+  for (int i = 32; i < 64; ++i) {
+    cout << simulator.memory[i] << ",";
+  }
+  cout << endl;
 
   return 0;
 }
