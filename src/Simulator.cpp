@@ -14,6 +14,7 @@ Simulator::Simulator() {
   this->OoO = 0;
   this->TI = 0;
   this->changePC = 0;
+  this->correctPredictions = 0;
 
   Register first(0,0);
   registers.push_back(first);
