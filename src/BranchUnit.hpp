@@ -17,7 +17,6 @@ class BranchUnit {
   int jbCycles;
   
   BranchUnit();
-  int find(const std::string&, std::vector<Section_t>& sections);
   void jump(int& PC, Instruction& currentInstruction,
     std::vector<Section_t>& sections);
   int jumpEqual(int& PC, Instruction& currentInstruction,
@@ -31,6 +30,7 @@ class BranchUnit {
     std::vector<std::vector<Register_t>>& callRegister,
     std::vector<Register_t> registers,
     std::vector<Section_t>& sections);
+  int find(const std::string&, std::vector<Section_t>& sections);
 
 };
 

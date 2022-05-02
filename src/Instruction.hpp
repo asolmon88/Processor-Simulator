@@ -50,6 +50,12 @@ class Instruction {
    size_t getR3();
 
    int operator!=(Instruction&);
+
+   // for branch prediction
+   int currentPC;
+   int previousPC;
+   int predPC;
+   int myPC;
 };
 
 #endif  // INSTRUCTIONS_H_

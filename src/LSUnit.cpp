@@ -2,7 +2,6 @@
 
 LSUnit::LSUnit() {
   this->loadCycles = 0;
-  moves = 0;
 }
 
 void LSUnit::load(std::vector<Register_t>& registers,
@@ -18,7 +17,7 @@ void LSUnit::store(std::vector<Register_t>& registers,
 void LSUnit::move(std::vector<Register_t>& registers,
   Instruction& currentInstruction, std::vector<int>& memory) {
   //cout << currentInstruction << endl;
-  if (currentInstruction.getOffset()) {
+  if (currentInstruction.getOffset() != -1) {
     int index = currentInstruction.getOffset()/4;
     Register_t* currentRegister = &registers[currentInstruction.getR2()];
     if (currentInstruction.offsetInFront()) {
@@ -27,9 +26,6 @@ void LSUnit::move(std::vector<Register_t>& registers,
         registers[currentInstruction.getR2()].value =
           memory[currentRegister->startIndex+index];
       }
-      cout << "Arriving at: " << currentInstruction.getR2() << endl;
-      cout << "Coming from: " << currentInstruction.getR1() << "+" << index << endl;
-      cout << "Value: " << memory[currentRegister->startIndex+index] << endl;
     } else {
       if (index <= currentRegister->endIndex) {
         if (currentInstruction.getR1() < 34 &&
@@ -73,13 +69,5 @@ void LSUnit::move(std::vector<Register_t>& registers,
     } else {
       registers[currentInstruction.getR2()].value = currentInstruction.getValue();
     }
-  }
-  ++moves;
-  if (moves == 1) {
-    cout << currentInstruction << endl;
-    cout << currentInstruction.getValue() << endl;
-    int index = registers[currentInstruction.getOffsetReg()].value/4;
-    Register_t* currentRegister = &registers[currentInstruction.getR2()];
-    cout << currentRegister->startIndex+index << endl;
   }
 }

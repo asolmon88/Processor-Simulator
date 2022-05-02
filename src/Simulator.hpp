@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "ALU.hpp"
+#include "BranchPredictor.hpp"
 #include "BranchUnit.hpp"
 #include "LSUnit.hpp"
 #include "Instruction.hpp"
@@ -28,10 +29,8 @@ class Simulator {
   void unableRegisters(Instruction&);
   void enableRegisters(Instruction&);
   void orderInstructions(int stage);  // stage 0 fetch, stage 1 decode
-  void preDecode(Instruction& current);
   void printRegisters();
-  int correctPrediction();
-  void checkPrediction(int i, int branchExecuted);
+  void preDecode(Instruction& current);  // used for branch prediction
 
  public:
   // Registers and memory
@@ -42,7 +41,6 @@ class Simulator {
   // To handle recursion
   std::vector<int> calls;
   std::vector<std::vector<Register_t>> callRegister;
-  int callPC;
 
   // To handle instructions
   std::vector<Instruction> instructions;
@@ -54,6 +52,7 @@ class Simulator {
   ALU alu;
   BranchUnit branchUnit;
   LSUnit lsUnit;
+  BranchPredictor predictor;
 
   // execution
   std::queue<Instruction> readyExecute;
@@ -77,15 +76,9 @@ class Simulator {
 
   int branch;
 
-  // for branch prediction (static)
-  int prediction;  // checks if the processor is predicting a branch
+  // for branch prediction
   int changePC;
-  int correctPredictions;  // the total of correct branch predictions
-  int currentPC;  // to see where the PC was before executing a branch
-  std::queue<int> previousPC;  // to fix the PC after predicting branch
-  std::queue<int> predPC;  // the result PC from the branch (the one it should be to be correct)
-  std::vector<std::queue<int>> previousPCRec;  // this is for recursion and branch prediction
-  std::vector<std::queue<int>> predPCRec;
+  int correctPredictions;
 
   Simulator();
 

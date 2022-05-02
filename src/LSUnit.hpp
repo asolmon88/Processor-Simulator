@@ -9,7 +9,6 @@ class LSUnit {
 
  public:
   int loadCycles;
-  int moves;
   LSUnit();
   void load(std::vector<Register_t>& registers,
     Instruction& currentInstruction, std::vector<int>& memory);

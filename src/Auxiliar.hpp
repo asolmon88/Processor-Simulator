@@ -15,7 +15,7 @@ class Auxiliar {
    static void readFile(const char* filename, std::vector<std::string>& instructions);
    static int isInstruction(std::string instruction);
    static void saveInstructions(
-    std::vector<Instruction>& instructions, std::string instruction, int& moves);
+    std::vector<Instruction>& instructions, std::string instruction);
    static int saveSection(std::vector<Section_t>& sections, std::string instruction,
     int index);
    static void getInstructions(std::vector<Instruction>& instructions,

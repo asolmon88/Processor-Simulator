@@ -30,24 +30,25 @@ mov 33, [R2, 112]
 mov 6, [R2, 116]
 
 mov 0, R3
+mov 0, R4
 mov 0, R5
-mov 0, R6 
+mov 0, R6
 mov 29, R7
-mov 28, R12
+mov 0, R12
 mov 1, R8
 mov 4, R9
 
 forTwo:
-  mov [R2, R6], R10
-  add R6, R9, R6
+  mov [R2, R4], R10
+  add R4, R9, R6
   mov [R2, R6], R11
   cmp R10, R11
   jb swap
 
 condition:
-  mov 28, R12
+  sub R3, R7, R12
   add R5, R8, R5
-  sub R12, R3, R12
+  add R9, R4, R4
   cmp R5, R12
   ja forTwo
 
@@ -55,11 +56,12 @@ forOne:
   add R3, R8, R3
   cmp R3, R7
   je finish
-  mov 0, R6
+  mov 0, R5
+  mov 0, R4
   jmp forTwo
 
 swap:
-  mov R11, [R2, R5]
+  mov R11, [R2, R4]
   mov R10, [R2, R6]
   jmp condition
 

@@ -12,9 +12,13 @@ Instruction::Instruction() {
   this->register1 = 34;
   this->register2 = 34;
   this->register3 = 34;
-  this->offset = 0;
+  this->offset = -1;
   this->offsetReg = 0;
   this->hasOffsetInFront = 0;
+  this->currentPC = -1;
+  this->predPC = -1;
+  this->previousPC = -1;
+  this->myPC = -1;
 }
 
 void Instruction::setOpcode(std::string opcode) {
